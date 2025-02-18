@@ -12,3 +12,32 @@ datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
+
+// Schema for user
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  // UID received from firebase
+  clerkID   String   @unique
+  // Username for the user - must be unique.
+  username  String?  @unique
+  // Name of the user
+  name      String?
+  // User's Email address
+  email     String   @unique
+  teams     Team[]
+  // Created & updated times
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Team {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  // User who has created the team (player)
+  User      User?    @relation(fields: [userId], references: [id])
+  // ID of user who has created the team (player)
+  userId    String?  @db.ObjectId
+  // Created & updated times
+  team      Json[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

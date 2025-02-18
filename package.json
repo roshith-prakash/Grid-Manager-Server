@@ -1,17 +1,18 @@
 {
   "name": "grid-manager-server",
   "version": "1.0.0",
-  "description": "",
+  "description": "Server for Grid Manager - A Fantasy F1 App.",
   "main": "index.js",
+  "keywords": [],
+  "author": "Roshith Prakash",
+  "license": "ISC",
+  "type": "module",
   "scripts": {
     "build": "npx tsc",
     "dev": "npm run build && node dist/index.js",
-    "server": "node dist/index.js"
+    "server": "node dist/index.js",
+    "host" : "ngrok http --url=mastodon-comic-deeply.ngrok-free.app 4000"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "@prisma/client": "^6.3.1",
     "cors": "^2.8.5",

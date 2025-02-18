@@ -5,11 +5,12 @@ import express from "express";
 import dotenv from "dotenv";
 import helmet from "helmet";
 import cors, { CorsOptions } from "cors";
+import { webHookHandler } from "./webhook/clerk.ts";
 dotenv.config();
 
 // Importing Routes ----------------------------------------------------------------------------------------------
 
-import routes from "./routes/index.ts";
+import authRoutes from "./routes/auth.route.ts";
 
 // Initializing Server -------------------------------------------------------------------------------------------
 
@@ -22,28 +23,28 @@ const server = http.createServer(app);
 const whitelist = ["http://localhost:3000"];
 
 // Function to deny access to domains except those in whitelist.
-const corsOptions: CorsOptions = {
-  origin: function (
-    origin: string | undefined,
-    callback: (err: Error | null, allow?: boolean) => void
-  ) {
-    // Find request domain and check in whitelist.
-    if (origin && whitelist.indexOf(origin) !== -1) {
-      // Accept request
-      callback(null, true);
-    } else {
-      // Send CORS error.
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-};
+// const corsOptions: CorsOptions = {
+//   origin: function (
+//     origin: string | undefined,
+//     callback: (err: Error | null, allow?: boolean) => void
+//   ) {
+//     // Find request domain and check in whitelist.
+//     if (origin && whitelist.indexOf(origin) !== -1) {
+//       // Accept request
+//       callback(null, true);
+//     } else {
+//       // Send CORS error.
+//       callback(new Error("Not allowed by CORS"));
+//     }
+//   },
+// };
 
 // Parses request body.
 app.use(express.urlencoded({ extended: true }));
 // Parses JSON passed inside body.
 app.use(express.json());
 // Enable CORS
-app.use(cors(corsOptions));
+app.use(cors());
 // Add security to server.
 app.use(helmet());
 
@@ -54,9 +55,12 @@ app.get("/", (req, res) => {
   res.status(200).send("We are good to go!");
 });
 
+// Endpoint for Clerk Webhook
+app.post("/api/clerkhook", webHookHandler);
+
 // Routes -----------------------------------------------------------------------------------------
 
-app.use("/api/v1", routes);
+app.use("/api/v1/auth", authRoutes);
 
 // Listening on PORT -------------------------------------------------------------------------------------------
 
