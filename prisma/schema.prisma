@@ -15,19 +15,21 @@ datasource db {
 
 // Schema for user
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   // UID received from firebase
-  clerkID   String   @unique
+  firebaseUID String   @unique
   // Username for the user - must be unique.
-  username  String?  @unique
+  username    String?  @unique
   // Name of the user
-  name      String?
+  name        String?
   // User's Email address
-  email     String   @unique
-  teams     Team[]
+  email       String   @unique
+  // User's Display picture link
+  photoURL    String?  @default("")
+  teams       Team[]
   // Created & updated times
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Team {

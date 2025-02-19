@@ -1,33 +1,36 @@
 {
-    "compilerOptions": {
-  
-      /* Language and Environment */
-      "target": "es2017",
-      "lib": ["ES2021"],
-      "module": "NodeNext",
-      "moduleResolution": "nodenext",
-      "allowImportingTsExtensions": true,
-      "resolveJsonModule": true, /* Allow importing .json files */
-      "esModuleInterop": true,
-      "forceConsistentCasingInFileNames": true,
-      "strict": true,
-  
-      /* Modules */
-      "rootDir": "./", /* Set the root folder containing your source files */
-      "outDir": "./dist", /* Specify the output folder for all emitted files */
-      "declaration": true, /* Generate .d.ts files */
-      "declarationDir": "./dist/types", /* Output declarations to a separate folder */
-      "allowSyntheticDefaultImports": true,
-      "skipLibCheck": true,
-  
-      /* Emit */
-      "removeComments": true,
-      "rewriteRelativeImportExtensions": true, /* Rewrite .ts to .js in imports */
-      "preserveConstEnums": true,
-  
-      /* Interop Constraints */
-      "isolatedModules": true, /* Ensure each file can be safely transpiled */
-    },
-    "include": ["*"], /* Include all TypeScript files in the src folder */
-    "exclude": ["node_modules", "dist", "**/*.test.ts"] /* Exclude test files and output folder */
-  }
+  "compilerOptions": {
+    /* Language and Environment */
+    "target": "es2017",
+    "lib": ["ES2021"],
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true /* Allow importing .json files */,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+
+    /* Modules */
+    "rootDir": "./" /* Set the root folder containing your source files */,
+    "outDir": "./dist" /* Specify the output folder for all emitted files */,
+    "declaration": true /* Generate .d.ts files */,
+    "declarationDir": "./dist/types" /* Output declarations to a separate folder */,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+
+    /* Emit */
+    "removeComments": true,
+    "rewriteRelativeImportExtensions": true /* Rewrite .ts to .js in imports */,
+    "preserveConstEnums": true,
+
+    /* Interop Constraints */
+    "isolatedModules": true /* Ensure each file can be safely transpiled */
+  },
+  "include": ["*"] /* Include all TypeScript files in the src folder */,
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts"
+  ] /* Exclude test files and output folder */
+}
