@@ -2,14 +2,15 @@
   "name": "grid-manager-server",
   "version": "1.0.0",
   "description": "Server for Grid Manager - A Fantasy F1 App.",
-  "main": "index.js",
+  "main": "index.ts",
   "keywords": [],
   "author": "Roshith Prakash",
   "license": "ISC",
   "type": "module",
   "scripts": {
-    "build": "npx tsc",
-    "dev": "npm run build && node dist/index.js",
+    "build": "tsc",
+    "devCompiler":"tsc --watch",
+    "dev": "nodemon dist/index.js",
     "server": "node dist/index.js"
   },
   "dependencies": {
