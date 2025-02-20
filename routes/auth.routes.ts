@@ -27,7 +27,7 @@ router.post("/get-current-user", getCurrentUser);
 router.post("/get-user-info", getUserProfile);
 
 // Check if username already exists
-router.post("/checkUsername", checkIfUsernameExists);
+router.post("/check-username", checkIfUsernameExists);
 
 // Update the user's details in the database.
 router.post("/update-user", upload.single("file"), updateUser);

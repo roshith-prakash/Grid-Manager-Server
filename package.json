@@ -8,10 +8,11 @@
   "license": "ISC",
   "type": "module",
   "scripts": {
-    "build": "tsc",
-    "devCompiler":"tsc --watch",
+    "build": "npx tsc",
+    "devCompiler":"npx tsc --watch",
     "dev": "nodemon dist/index.js",
-    "server": "node dist/index.js"
+    "server": "node dist/index.js",
+    "postinstall": "npx prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.3.1",
