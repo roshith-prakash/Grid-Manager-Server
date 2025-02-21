@@ -3,11 +3,13 @@ import express, { Response } from "express";
 import dotenv from "dotenv";
 import helmet from "helmet";
 import cors, { CorsOptions } from "cors";
+
 dotenv.config();
 
 // Importing Routes ----------------------------------------------------------------------------------------------
 
 import authRouter from "./routes/auth.routes.ts";
+import teamRouter from "./routes/team.routes.ts";
 
 // Initializing Server -------------------------------------------------------------------------------------------
 
@@ -17,10 +19,7 @@ let server = http.createServer(app);
 // Using Middleware -------------------------------------------------------------------------------------------
 
 // Whitelist for domains
-const whitelist = [
-  "http://localhost:3000",
-  "https://grid-manager-frontend.vercel.app",
-];
+const whitelist = ["http://localhost:3000", "https://grid-manager.vercel.app"];
 
 // Function to deny access to domains except those in whitelist.
 const corsOptions: CorsOptions = {
@@ -59,6 +58,7 @@ app.get("/", (_, res: Response) => {
 
 // Auth Routes
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/team", teamRouter);
 
 // Listening on PORT -------------------------------------------------------------------------------------------
 
