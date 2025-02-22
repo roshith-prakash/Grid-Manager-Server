@@ -38,8 +38,12 @@ model Team {
   User      User?    @relation(fields: [userId], references: [id])
   // ID of user who has created the team (player)
   userId    String?  @db.ObjectId
-  // Selected Drivers - contains Driver IDs
-  team      String[]
+  // Selected Drivers - full JSON objects
+  team      Json
+  // Selected Driver IDs for filtering
+  driverIds String[] @default([])
+  // The price for the team
+  price     Int      @default(00)
   // Score
   score     Int      @default(0)
   // Created & updated times

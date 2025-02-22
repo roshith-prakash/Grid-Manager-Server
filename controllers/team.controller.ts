@@ -28,7 +28,8 @@ export const createTeam = async (
 
     const createdTeam = await prisma.team.create({
       data: {
-        team: selectedDrivers,
+        team: team,
+        driverIds: selectedDrivers,
         userId: userinDB?.id,
       },
     });
