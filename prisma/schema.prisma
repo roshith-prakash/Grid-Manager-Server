@@ -33,20 +33,25 @@ model User {
 }
 
 model Team {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
   // User who has created the team (player)
-  User      User?    @relation(fields: [userId], references: [id])
+  User             User?    @relation(fields: [userId], references: [id])
   // ID of user who has created the team (player)
-  userId    String?  @db.ObjectId
-  // Selected Drivers - full JSON objects
-  team      Json
+  userId           String?  @db.ObjectId
+  name             String?
+  // Selected Drivers
+  teamDrivers      Json[]
+  // Selected Constructors 
+  teamConstructors Json[]
   // Selected Driver IDs for filtering
-  driverIds String[] @default([])
+  driverIds        String[] @default([])
+  // Selected Driver IDs for filtering
+  constructorIds   String[] @default([])
   // The price for the team
-  price     Int      @default(00)
+  price            Int      @default(0)
   // Score
-  score     Int      @default(0)
+  score            Int      @default(0)
   // Created & updated times
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
