@@ -27,7 +27,10 @@
     /* Interop Constraints */
     "isolatedModules": true /* Ensure each file can be safely transpiled */
   },
-  "include": ["*"] /* Include all TypeScript files in the src folder */,
+  "include": [
+    "*",
+    "constants/ConstantValues.ts"
+  ] /* Include all TypeScript files in the src folder */,
   "exclude": [
     "node_modules",
     "dist",

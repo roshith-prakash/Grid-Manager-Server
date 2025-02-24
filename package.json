@@ -9,13 +9,14 @@
   "type": "module",
   "scripts": {
     "build": "npx tsc",
-    "devCompiler":"npx tsc --watch",
+    "devCompiler": "npx tsc --watch",
     "dev": "nodemon dist/index.js",
     "server": "node dist/index.js",
     "postinstall": "npx prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.3.1",
+    "axios": "^1.7.9",
     "cloudinary": "^2.5.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
