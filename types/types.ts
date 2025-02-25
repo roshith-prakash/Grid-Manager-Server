@@ -54,6 +54,61 @@ interface Constructor {
   nationality: string;
 }
 
+interface Time {
+  millis: string;
+  time: string;
+}
+
+interface FastestLap {
+  lap: string;
+  Time: {
+    time: string;
+  };
+  rank?: string;
+  AverageSpeed?: {
+    units: string;
+    speed: string;
+  };
+}
+
+interface SprintResultItem {
+  number: string;
+  position: string;
+  positionText: string;
+  points: string;
+  Driver: Driver;
+  Constructor: Constructor;
+  grid: string;
+  laps: string;
+  status: string;
+  Time?: Time;
+  FastestLap?: FastestLap;
+}
+
+interface QualiResultItem {
+  number: string;
+  position: string;
+  Driver: Driver;
+  Constructor: Constructor;
+  Q1: string;
+  Q2: string;
+  Q3: string;
+}
+
+interface RaceResultItem {
+  number: string;
+  position: string;
+  positionText: string;
+  points: string;
+  Driver: Driver;
+  Constructor: Constructor;
+  grid: string;
+  laps: string;
+  status: string;
+  Time?: Time;
+  FastestLap?: FastestLap;
+}
+
 export type {
   MRData,
   StandingsTable,
@@ -62,4 +117,7 @@ export type {
   Driver,
   Constructor,
   ConstructorStanding,
+  SprintResultItem,
+  QualiResultItem,
+  RaceResultItem,
 };

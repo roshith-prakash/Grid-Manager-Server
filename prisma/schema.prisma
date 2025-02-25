@@ -32,6 +32,7 @@ model User {
   updatedAt   DateTime @updatedAt
 }
 
+// Fantasy team that is created by the user - contains 3 drivers & 2 constructors
 model Team {
   id               String   @id @default(auto()) @map("_id") @db.ObjectId
   // User who has created the team (player)
@@ -54,4 +55,37 @@ model Team {
   // Created & updated times
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+}
+
+// Keeps track of last race for which points were added
+model LastRace {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  season    Int
+  round     Int
+  raceName  String
+  // Created & updated times
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Keeps track of last qualifying for which points were added
+model LastQualifying {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  season    Int
+  round     Int
+  raceName  String
+  // Created & updated times
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Keeps track of last sprint for which points were added
+model LastSprint {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  season    Int
+  round     Int
+  raceName  String
+  // Created & updated times
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

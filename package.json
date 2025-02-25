@@ -12,7 +12,8 @@
     "devCompiler": "npx tsc --watch",
     "dev": "nodemon dist/index.js",
     "server": "node dist/index.js",
-    "postinstall": "npx prisma generate"
+    "postinstall": "npx prisma generate",
+    "studio":"npx prisma studio"
   },
   "dependencies": {
     "@prisma/client": "^6.3.1",
