@@ -30,6 +30,7 @@ model User {
   // Created & updated times
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  League      League[]
 }
 
 // Fantasy team that is created by the user - contains 3 drivers & 2 constructors
@@ -55,6 +56,20 @@ model Team {
   // Created & updated times
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+  League           League?  @relation(fields: [leagueId], references: [id])
+  leagueId         String?  @db.ObjectId
+}
+
+model League {
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
+  // User who has created the team (player)
+  User     User?   @relation(fields: [userId], references: [id])
+  // ID of user who has created the team (player)
+  userId   String? @db.ObjectId
+  // UID for the League
+  leagueID String
+  name     String?
+  teams    Team[]
 }
 
 // Keeps track of last race for which points were added

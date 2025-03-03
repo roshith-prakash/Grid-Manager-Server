@@ -13,7 +13,7 @@
     "dev": "nodemon dist/index.js",
     "server": "node dist/index.js",
     "postinstall": "npx prisma generate",
-    "studio":"npx prisma studio"
+    "studio": "npx prisma studio"
   },
   "dependencies": {
     "@prisma/client": "^6.3.1",
@@ -23,7 +23,8 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "helmet": "^8.0.0",
-    "multer": "^1.4.5-lts.1"
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

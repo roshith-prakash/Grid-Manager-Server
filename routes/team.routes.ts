@@ -3,6 +3,7 @@ import {
   createTeam,
   getDrivers,
   getConstructors,
+  createLeague,
 } from "../controllers/team.controller.ts";
 
 // Create a router.
@@ -21,5 +22,8 @@ router.get("/get-constructors", getConstructors);
 
 // Create a new team for the user.
 router.post("/create-team", createTeam);
+
+// Create a new league
+router.post("/create-league", createLeague);
 
 export default router;
