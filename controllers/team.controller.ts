@@ -18,20 +18,50 @@ export const createLeague = async (
   try {
     const user = req?.body?.user;
     const leagueName = req?.body?.leagueName;
+    const isPrivate = req?.body?.isPrivate;
 
     // Generate an ID for the league
-    const leagueID = generateLeagueUID();
+    const leagueId = generateLeagueUID();
 
     const newLeague = await prisma.league.create({
       data: {
         name: leagueName,
         userId: user?.id,
-        leagueID: leagueID,
+        leagueId: leagueId,
+        private: isPrivate,
       },
     });
 
     res.status(200).send({ data: newLeague });
     return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ data: "Something went wrong." });
+    return;
+  }
+};
+
+// Find a league by leagueId
+export const getLeague = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const leagueId = req?.body?.leagueId;
+
+    const league = await prisma.league.findUnique({
+      where: {
+        leagueId: leagueId,
+      },
+      include: {
+        User: true,
+      },
+    });
+
+    if (league) {
+      res.status(200).send({ data: league });
+      return;
+    } else {
+      res.status(404).send({ data: "League does not exist" });
+      return;
+    }
   } catch (err) {
     console.log(err);
     res.status(500).send({ data: "Something went wrong." });
@@ -48,7 +78,8 @@ export const createTeam = async (
     const user = req.body?.user;
     const teamDrivers = req?.body?.teamDrivers;
     const teamConstructors = req?.body?.teamConstructors;
-    const teamName = req?.body?.name;
+    const teamName = req?.body?.teamName;
+    const leagueId = req?.body?.leagueId;
 
     const userinDB = await prisma.user.findUnique({
       where: {
@@ -56,9 +87,21 @@ export const createTeam = async (
       },
     });
 
-    // If user not present in DB
+    // If user is not present in DB
     if (!userinDB) {
       res.status(404).send({ data: "User does not exist." });
+      return;
+    }
+
+    const league = await prisma.league.findUnique({
+      where: {
+        leagueId: leagueId,
+      },
+    });
+
+    // If league is not present in DB
+    if (!league) {
+      res.status(404).send({ data: "League does not exist." });
       return;
     }
 
@@ -75,6 +118,7 @@ export const createTeam = async (
         driverIds: selectedDrivers,
         constructorIds: selectedConstructors,
         userId: userinDB?.id,
+        leagueId: league?.id,
       },
     });
 

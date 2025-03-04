@@ -67,7 +67,8 @@ model League {
   // ID of user who has created the team (player)
   userId   String? @db.ObjectId
   // UID for the League
-  leagueID String
+  leagueId String  @unique
+  private  Boolean @default(false)
   name     String?
   teams    Team[]
 }

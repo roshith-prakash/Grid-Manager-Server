@@ -65,10 +65,10 @@ app.get("/", (_, res: Response) => {
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/team", teamRouter);
 
-// Updating scores when server loads (cannot use Scheduling with serverless)
-updateQualiScores();
-updateSprintScores();
-updateRaceScores();
+// Updating scores when server loads (cannot use Scheduling with Serverless infrastructure)
+// updateQualiScores();
+// updateSprintScores();
+// updateRaceScores();
 
 // Listening on PORT -------------------------------------------------------------------------------------------
 
