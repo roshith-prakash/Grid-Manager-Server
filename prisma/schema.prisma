@@ -13,6 +13,52 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Drivers
+model Driver {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  // Driver ID - usually last name
+  driverId          String
+  // 3 Letter driver code
+  code              String
+  // Price
+  price             Int      @default(0)
+  // Points scored in the season
+  points            Int      @default(0)
+  // First Name
+  givenName         String
+  // Last Name
+  familyName        String
+  // Image of the driver
+  image             String
+  // Nationality of driver
+  countryCode       String?
+  // Driver Number (Car number)
+  permanentNumber   Int
+  // Team for which the driver drives
+  constructor       String
+  // Constructor color
+  constructor_color String
+  // Created & updated times
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// Constructors 
+model Constructor {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  // Constructor Id
+  constructorId String
+  // Constructor name
+  name          String
+  // Price
+  price         Int      @default(0)
+  // Points scored in the season
+  points        Int      @default(0)
+  // Created & updated times
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
 // Schema for user
 model User {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -60,17 +106,22 @@ model Team {
   leagueId         String?  @db.ObjectId
 }
 
+// League in which teams are added
 model League {
-  id       String  @id @default(auto()) @map("_id") @db.ObjectId
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
   // User who has created the team (player)
-  User     User?   @relation(fields: [userId], references: [id])
+  User          User?    @relation(fields: [userId], references: [id])
   // ID of user who has created the team (player)
-  userId   String? @db.ObjectId
+  userId        String?  @db.ObjectId
   // UID for the League
-  leagueId String  @unique
-  private  Boolean @default(false)
-  name     String?
-  teams    Team[]
+  leagueId      String   @unique
+  private       Boolean  @default(false)
+  name          String?
+  numberOfTeams Int      @default(0)
+  teams         Team[]
+  // Created & updated times
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 // Keeps track of last race for which points were added

@@ -9,6 +9,7 @@ import {
   driverPriceScale,
 } from "../constants/ConstantValues.ts";
 import { generateLeagueUID } from "../utils/generateLeagueUID.ts";
+import { driversOpenF1 } from "../constants/Drivers.ts";
 
 // Create a new league
 export const createLeague = async (
@@ -33,6 +34,106 @@ export const createLeague = async (
     });
 
     res.status(200).send({ data: newLeague });
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ data: "Something went wrong." });
+    return;
+  }
+};
+
+// Find public leagues
+export const getPublicLeagues = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const leagues = await prisma.league.findMany({
+      where: {
+        private: false,
+      },
+      orderBy: {
+        numberOfTeams: "desc",
+      },
+      skip: req?.body?.page * 4,
+      take: 4,
+    });
+
+    // Check if next page exists.
+    const nextPage = await prisma.league.count({
+      orderBy: {
+        createdAt: "desc",
+      },
+      skip: (req?.body?.page + 1) * 4,
+      take: 4,
+    });
+
+    // Return the leagues
+    res.status(200).send({
+      leagues: leagues,
+      nextPage: nextPage != 0 ? req?.body?.page + 1 : null,
+    });
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ data: "Something went wrong." });
+    return;
+  }
+};
+
+// Search for Public Leagues
+export const searchPublicLeagues = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const searchTerm = req?.body?.searchTerm;
+    const page = req?.body?.page;
+
+    // Find all leagues
+    const leagues = await prisma.league.findMany({
+      where: {
+        private: false,
+        OR: [
+          { leagueId: { contains: searchTerm, mode: "insensitive" } },
+          { name: { contains: searchTerm, mode: "insensitive" } },
+        ],
+      },
+      select: {
+        name: true,
+        leagueId: true,
+        numberOfTeams: true,
+        User: {
+          select: {
+            name: true,
+            username: true,
+            photoURL: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      skip: page * 2,
+      take: 2,
+    });
+
+    // Check if next page exists.
+    const nextPageExists = await prisma.league.count({
+      where: {
+        OR: [
+          { leagueId: { contains: searchTerm, mode: "insensitive" } },
+          { name: { contains: searchTerm, mode: "insensitive" } },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+      skip: page * 2,
+      take: 2,
+    });
+
+    // Return the current page posts and next page number
+    res.status(200).send({
+      leagues: leagues,
+      nextPage: nextPageExists != 0 ? page + 1 : null,
+    });
     return;
   } catch (err) {
     console.log(err);
@@ -137,25 +238,9 @@ export const getDrivers = async (
   res: Response
 ): Promise<void> => {
   try {
-    let apiData = await axios.get(
-      "https://api.jolpi.ca/ergast/f1/2024/driverstandings"
-    );
+    let drivers = await prisma.driver.findMany();
 
-    let driversInSeason =
-      apiData?.data?.MRData?.StandingsTable?.StandingsLists[0]?.DriverStandings;
-
-    let filteredDrivers = driversInSeason.map(
-      (item: DriverStanding, index: number) => {
-        return {
-          ...item?.Driver,
-          price: driverPriceScale[index]
-            ? driverPriceScale[index]
-            : DEFAULT_DRIVER_PRICE,
-        };
-      }
-    );
-
-    res.status(200).send({ drivers: filteredDrivers });
+    res.status(200).send({ drivers: drivers });
     return;
   } catch (err) {
     console.log(err);
@@ -170,27 +255,9 @@ export const getConstructors = async (
   res: Response
 ): Promise<void> => {
   try {
-    let apiData = await axios.get(
-      "https://api.jolpi.ca/ergast/f1/2024/constructorstandings"
-    );
+    let constructors = await prisma.constructor.findMany();
 
-    let constructorsInSeason =
-      apiData?.data?.MRData?.StandingsTable?.StandingsLists[0]
-        ?.ConstructorStandings;
-
-    let filteredConstructors = constructorsInSeason.map(
-      (item: ConstructorStanding, index: number) => {
-        return {
-          ...item?.Constructor,
-          id: index + 1,
-          price: constructorPriceScale[index]
-            ? constructorPriceScale[index]
-            : DEFAULT_CONSTRUCTOR_PRICE,
-        };
-      }
-    );
-
-    res.status(200).send({ constructors: filteredConstructors });
+    res.status(200).send({ constructors: constructors });
     return;
   } catch (err) {
     console.log(err);
