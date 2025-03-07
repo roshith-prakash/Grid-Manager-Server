@@ -7,6 +7,9 @@ import {
   getLeague,
   getPublicLeagues,
   searchPublicLeagues,
+  getTeamsInaLeague,
+  getUserTeams,
+  getUserLeagues,
 } from "../controllers/team.controller.ts";
 
 // Create a router.
@@ -37,5 +40,14 @@ router.post("/get-public-leagues", getPublicLeagues);
 
 // Search public leagues
 router.post("/search-public-leagues", searchPublicLeagues);
+
+// Get Teams in a League
+router.post("/get-teams-in-a-league", getTeamsInaLeague);
+
+// Get Teams for a User
+router.post("/get-user-teams", getUserTeams);
+
+// Get Leagues in which a User's teams are present
+router.post("/get-user-leagues", getUserLeagues);
 
 export default router;

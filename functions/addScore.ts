@@ -54,10 +54,12 @@ export const updateRaceScores = async () => {
         let updateOperations: any[] = [];
 
         // Loop through the result array
-        result.forEach(async (driverResult: RaceResultItem) => {
+        result.forEach(async (driverResult: RaceResultItem, index: number) => {
           const driverId = driverResult.Driver.driverId;
           const constructorId = driverResult.Constructor.constructorId;
-          const points = Number(driverResult.points) || 0; // Ensure points are numeric
+          const points =
+            (Number(driverResult.points) || 0) +
+            Math.round((result?.length - index) / 2.5); // Ensure points are numeric
 
           // Add driver score
           if (driverId) {
@@ -65,6 +67,13 @@ export const updateRaceScores = async () => {
               prisma.team.updateMany({
                 where: { driverIds: { has: driverId } },
                 data: { score: { increment: points } },
+              })
+            );
+
+            updateOperations.push(
+              prisma.driver.update({
+                where: { driverId: driverId },
+                data: { points: { increment: points } },
               })
             );
           }
@@ -75,6 +84,13 @@ export const updateRaceScores = async () => {
               prisma.team.updateMany({
                 where: { constructorIds: { has: constructorId } },
                 data: { score: { increment: points } },
+              })
+            );
+
+            updateOperations.push(
+              prisma.constructor.update({
+                where: { constructorId: constructorId },
+                data: { points: { increment: points } },
               })
             );
           }
@@ -94,11 +110,6 @@ export const updateQualiScores = async () => {
   try {
     let apiData = await axios.get(
       "https://api.jolpi.ca/ergast/f1/2024/last/qualifying/"
-    );
-
-    console.log(
-      "Quali :",
-      apiData?.data?.MRData?.RaceTable?.Races?.length > 0 ? "Present" : "Absent"
     );
 
     if (apiData?.data?.MRData?.RaceTable?.Races?.length > 0) {
@@ -146,6 +157,13 @@ export const updateQualiScores = async () => {
                 data: { score: { increment: points } },
               })
             );
+
+            updateOperations.push(
+              prisma.driver.update({
+                where: { driverId: driverId },
+                data: { points: { increment: points } },
+              })
+            );
           }
 
           // Add constructor score
@@ -154,6 +172,13 @@ export const updateQualiScores = async () => {
               prisma.team.updateMany({
                 where: { constructorIds: { has: constructorId } },
                 data: { score: { increment: points } },
+              })
+            );
+
+            updateOperations.push(
+              prisma.constructor.update({
+                where: { constructorId: constructorId },
+                data: { points: { increment: points } },
               })
             );
           }
@@ -205,33 +230,51 @@ export const updateSprintScores = async () => {
 
         let updateOperations: any[] = [];
 
-        result.forEach(async (driverResult: SprintResultItem) => {
-          const driverId = driverResult.Driver.driverId;
-          const constructorId = driverResult.Constructor.constructorId;
-          const points = Number(driverResult.points) || 0; // Ensure points are numeric
+        result.forEach(
+          async (driverResult: SprintResultItem, index: number) => {
+            const driverId = driverResult.Driver.driverId;
+            const constructorId = driverResult.Constructor.constructorId;
+            const points =
+              (Number(driverResult.points) || 0) +
+              Math.round((result?.length - index) / 2.5); // Ensure points are numeric
 
-          let updateOperations = [];
+            let updateOperations = [];
 
-          // Add driver score
-          if (driverId) {
-            updateOperations.push(
-              prisma.team.updateMany({
-                where: { driverIds: { has: driverId } },
-                data: { score: { increment: points } },
-              })
-            );
+            // Add driver score
+            if (driverId) {
+              updateOperations.push(
+                prisma.team.updateMany({
+                  where: { driverIds: { has: driverId } },
+                  data: { score: { increment: points } },
+                })
+              );
+
+              updateOperations.push(
+                prisma.driver.update({
+                  where: { driverId: driverId },
+                  data: { points: { increment: points } },
+                })
+              );
+            }
+
+            // Add constructor score
+            if (constructorId) {
+              updateOperations.push(
+                prisma.team.updateMany({
+                  where: { constructorIds: { has: constructorId } },
+                  data: { score: { increment: points } },
+                })
+              );
+
+              updateOperations.push(
+                prisma.constructor.update({
+                  where: { constructorId: constructorId },
+                  data: { points: { increment: points } },
+                })
+              );
+            }
           }
-
-          // Add constructor score
-          if (constructorId) {
-            updateOperations.push(
-              prisma.team.updateMany({
-                where: { constructorIds: { has: constructorId } },
-                data: { score: { increment: points } },
-              })
-            );
-          }
-        });
+        );
 
         await Promise.all(updateOperations);
       }

@@ -6,7 +6,7 @@ import {
   checkIfUsernameExists,
   updateUser,
   deleteUser,
-} from "../controllers/auth.controller.ts";
+} from "../controllers/user.controller.ts";
 import { Router } from "express";
 
 // Create a router.

@@ -8,8 +8,9 @@ dotenv.config();
 
 // Importing Routes ----------------------------------------------------------------------------------------------
 
-import authRouter from "./routes/auth.routes.ts";
+import userRouter from "./routes/user.routes.ts";
 import teamRouter from "./routes/team.routes.ts";
+
 import {
   updateQualiScores,
   updateRaceScores,
@@ -62,13 +63,13 @@ app.get("/", (_, res: Response) => {
 // Routes -----------------------------------------------------------------------------------------
 
 // Auth Routes
-app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/user", userRouter);
 app.use("/api/v1/team", teamRouter);
 
 // Updating scores when server loads (cannot use Scheduling with Serverless infrastructure)
-// updateQualiScores();
-// updateSprintScores();
-// updateRaceScores();
+updateQualiScores();
+updateSprintScores();
+updateRaceScores();
 
 // Listening on PORT -------------------------------------------------------------------------------------------
 

@@ -136,6 +136,12 @@ export const getUserProfile = async (
       where: {
         username: username,
       },
+      select: {
+        name: true,
+        username: true,
+        createdAt: true,
+        photoURL: true,
+      },
     });
 
     // If user not present in DB

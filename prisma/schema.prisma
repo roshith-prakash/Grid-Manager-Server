@@ -17,7 +17,7 @@ datasource db {
 model Driver {
   id                String   @id @default(auto()) @map("_id") @db.ObjectId
   // Driver ID - usually last name
-  driverId          String
+  driverId          String   @unique
   // 3 Letter driver code
   code              String
   // Price
@@ -45,18 +45,20 @@ model Driver {
 
 // Constructors 
 model Constructor {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  // Constructor number (required for DND)
+  constructorNumber Int
   // Constructor Id
-  constructorId String
+  constructorId     String   @unique
   // Constructor name
-  name          String
+  name              String
   // Price
-  price         Int      @default(0)
+  price             Int      @default(0)
   // Points scored in the season
-  points        Int      @default(0)
+  points            Int      @default(0)
   // Created & updated times
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 // Schema for user
