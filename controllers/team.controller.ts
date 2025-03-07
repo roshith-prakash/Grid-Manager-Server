@@ -336,7 +336,7 @@ export const getTeamsInaLeague = async (
   }
 };
 
-// Get all Teams for a user
+// Get all Teams for a user (Current user)
 export const getUserTeams = async (
   req: Request,
   res: Response
@@ -408,7 +408,7 @@ export const getUserTeams = async (
   }
 };
 
-// Get all the leagues that a user is in (participant or admin)
+// Get all the leagues that a user is in (participant or admin) (Current user)
 export const getUserLeagues = async (
   req: Request,
   res: Response
@@ -469,6 +469,164 @@ export const getUserLeagues = async (
           { userId: user.id }, // User created the league
           { teams: { some: { userId: user.id } } }, // User is part of a league via a team
         ],
+      },
+      orderBy: { numberOfTeams: "desc" },
+      skip: page * 4,
+      take: 4,
+    });
+
+    res.status(200).send({
+      leagues: leagues,
+      nextPage: nextPageExists != 0 ? page + 1 : null,
+    });
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ data: "Something went wrong." });
+  }
+};
+
+// Get all Public Teams for a user (Non current user)
+export const getUserPublicTeams = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const username = req?.body?.username;
+    const page = req?.body?.page;
+
+    // Find user by username
+    const user = await prisma.user.findUnique({
+      where: {
+        username: username,
+      },
+      select: {
+        id: true, // Get user ID
+      },
+    });
+
+    // If user does not exist - send an error.
+    if (!user) {
+      res.status(404).send({ data: "User not found." });
+      return;
+    }
+
+    // Get teams where the user is the creator
+    const teams = await prisma.team.findMany({
+      where: {
+        userId: user.id,
+        League: {
+          private: false,
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        score: true,
+        createdAt: true,
+        updatedAt: true,
+        League: {
+          select: {
+            name: true,
+            leagueId: true,
+          },
+        },
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+      skip: page * 4,
+      take: 4,
+    });
+
+    // Check if more teams are present where the user is the creator.
+    const nextPageExists = await prisma.team.count({
+      where: {
+        userId: user.id,
+        League: {
+          private: false,
+        },
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+      skip: (page + 1) * 4,
+      take: 4,
+    });
+
+    res
+      .status(200)
+      .send({ teams: teams, nextPage: nextPageExists != 0 ? page + 1 : null });
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ data: "Something went wrong." });
+  }
+};
+
+// Get all the leagues that a user is in (participant or admin)
+export const getUserPublicLeagues = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const username = req?.body?.username;
+    const page = req?.body?.page;
+
+    // Find user by username
+    const user = await prisma.user.findUnique({
+      where: {
+        username: username,
+      },
+      select: {
+        id: true, // Get user ID
+      },
+    });
+
+    // If user is not present - send 404 error
+    if (!user) {
+      res.status(404).send({ data: "User not found." });
+      return;
+    }
+
+    // Fetch leagues where the user is either the creator or a participant
+    const leagues = await prisma.league.findMany({
+      where: {
+        OR: [
+          { userId: user.id }, // User created the league
+          { teams: { some: { userId: user.id } } }, // User is part of a league via a team
+        ],
+        private: false,
+      },
+      select: {
+        id: true,
+        leagueId: true,
+        name: true,
+        private: true,
+        numberOfTeams: true,
+        createdAt: true,
+        updatedAt: true,
+        User: {
+          select: {
+            name: true,
+            username: true,
+            photoURL: true,
+          },
+        },
+      },
+      orderBy: { numberOfTeams: "desc" },
+      skip: page * 4,
+      take: 4,
+    });
+
+    // Check if more leagues exist where the user is either the creator or a participant
+    const nextPageExists = await prisma.league.count({
+      where: {
+        OR: [
+          { userId: user.id }, // User created the league
+          { teams: { some: { userId: user.id } } }, // User is part of a league via a team
+        ],
+        private: false,
       },
       orderBy: { numberOfTeams: "desc" },
       skip: page * 4,
