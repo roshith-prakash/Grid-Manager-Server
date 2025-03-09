@@ -54,7 +54,7 @@ export const updateRaceScores = async () => {
         let updateOperations: any[] = [];
 
         // Loop through the result array
-        result.forEach(async (driverResult: RaceResultItem, index: number) => {
+        result.forEach((driverResult: RaceResultItem, index: number) => {
           const driverId = driverResult.Driver.driverId;
           const constructorId = driverResult.Constructor.constructorId;
           const points =
@@ -97,6 +97,7 @@ export const updateRaceScores = async () => {
         });
 
         await Promise.all(updateOperations);
+        console.log("Scores updated");
       }
     }
   } catch (err) {
@@ -147,7 +148,7 @@ export const updateQualiScores = async () => {
         result.forEach(async (driverResult: QualiResultItem, index: number) => {
           const driverId = driverResult.Driver.driverId;
           const constructorId = driverResult.Constructor.constructorId;
-          const points = Math.round((result?.length - index) / 2.5); // Ensure points are numeric
+          const points = Math.round((result?.length - index) / 1.5); // Ensure points are numeric
 
           // Add driver score
           if (driverId) {

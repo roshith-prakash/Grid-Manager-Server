@@ -12,6 +12,7 @@ import {
   getUserLeagues,
   getUserPublicTeams,
   getUserPublicLeagues,
+  getTeamById,
 } from "../controllers/team.controller.ts";
 
 // Create a router.
@@ -30,6 +31,9 @@ router.get("/get-constructors", getConstructors);
 
 // Create a new team for the user.
 router.post("/create-team", createTeam);
+
+// Get team by Id.
+router.post("/get-team-by-id", getTeamById);
 
 // Create a new league
 router.post("/create-league", createLeague);

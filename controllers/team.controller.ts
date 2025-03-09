@@ -248,6 +248,9 @@ export const createTeam = async (
       (item: any) => item?.constructorId
     );
 
+    teamDrivers?.forEach((item: any) => (item.points = 0));
+    teamConstructors?.forEach((item: any) => (item.points = 0));
+
     const createdTeam = await prisma.team.create({
       data: {
         name: teamName,
@@ -336,7 +339,56 @@ export const getTeamsInaLeague = async (
   }
 };
 
-// Get all Teams for a user (Current user)
+export const getTeamById = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const teamId = req?.body?.teamId;
+
+    if (!teamId) {
+      res.status(404).send({ data: "Team ID required" });
+      return;
+    }
+
+    const team = await prisma.team.findUnique({
+      where: {
+        id: teamId,
+      },
+      select: {
+        id: true,
+        name: true,
+        driverIds: true,
+        constructorIds: true,
+        teamConstructors: true,
+        teamDrivers: true,
+        price: true,
+        score: true,
+        League: {
+          select: {
+            name: true,
+            leagueId: true,
+            private: true,
+          },
+        },
+      },
+    });
+
+    if (team) {
+      res.status(200).send({ team: team });
+      return;
+    } else {
+      res.status(404).send({ data: "Team ID required" });
+      return;
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ data: "Something went wrong!" });
+    return;
+  }
+};
+
+// Get all Teams for the user (Current user)
 export const getUserTeams = async (
   req: Request,
   res: Response
@@ -408,7 +460,7 @@ export const getUserTeams = async (
   }
 };
 
-// Get all the leagues that a user is in (participant or admin) (Current user)
+// Get all the leagues that the user is in (participant or admin) (Current user)
 export const getUserLeagues = async (
   req: Request,
   res: Response
