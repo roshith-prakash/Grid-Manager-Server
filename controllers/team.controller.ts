@@ -278,6 +278,107 @@ export const createTeam = async (
   }
 };
 
+// Edit an existing Team
+export const editTeam = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const teamId = req.body?.teamId;
+    const teamDrivers = req?.body?.teamDrivers;
+    const teamConstructors = req?.body?.teamConstructors;
+    const teamName = req?.body?.teamName;
+    const price = req?.body?.price;
+
+    const team = await prisma.team.findUnique({
+      where: {
+        id: teamId,
+      },
+    });
+
+    // If team is not present in DB
+    if (!team) {
+      res.status(404).send({ data: "Team does not exist." });
+      return;
+    }
+
+    const selectedDrivers = teamDrivers.map((item: any) => item?.driverId);
+    const selectedConstructors = teamConstructors.map(
+      (item: any) => item?.constructorId
+    );
+
+    const editedTeam = await prisma.team.update({
+      where: {
+        id: teamId,
+      },
+      data: {
+        name: teamName,
+        teamDrivers: teamDrivers,
+        teamConstructors: teamConstructors,
+        driverIds: selectedDrivers,
+        constructorIds: selectedConstructors,
+        price: price,
+      },
+    });
+
+    res.status(200).send({ data: editedTeam });
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ data: "Something went wrong." });
+    return;
+  }
+};
+
+// Edit an existing Team
+export const deleteTeam = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const teamId = req.body?.teamId;
+
+    const team = await prisma.team.findUnique({
+      where: {
+        id: teamId,
+      },
+      select: {
+        id: true,
+        League: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+
+    // If team is not present in DB
+    if (!team) {
+      res.status(404).send({ data: "Team does not exist." });
+      return;
+    }
+
+    await prisma.league.update({
+      where: {
+        id: team?.League?.id,
+      },
+      data: {
+        numberOfTeams: { decrement: 1 },
+      },
+    });
+
+    await prisma.team.delete({
+      where: {
+        id: team?.id,
+      },
+    });
+
+    res.status(200).send({ data: "Team deleted." });
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ data: "Something went wrong." });
+    return;
+  }
+};
+
 // Search for Teams in a League
 export const getTeamsInaLeague = async (
   req: Request,
@@ -339,6 +440,7 @@ export const getTeamsInaLeague = async (
   }
 };
 
+// Get team data by Id
 export const getTeamById = async (
   req: Request,
   res: Response

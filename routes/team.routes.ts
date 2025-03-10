@@ -13,6 +13,8 @@ import {
   getUserPublicTeams,
   getUserPublicLeagues,
   getTeamById,
+  editTeam,
+  deleteTeam,
 } from "../controllers/team.controller.ts";
 
 // Create a router.
@@ -34,6 +36,12 @@ router.post("/create-team", createTeam);
 
 // Get team by Id.
 router.post("/get-team-by-id", getTeamById);
+
+// Edit an existing team.
+router.post("/edit-team", editTeam);
+
+// Edit an existing team.
+router.post("/delete-team", deleteTeam);
 
 // Create a new league
 router.post("/create-league", createLeague);
