@@ -17,6 +17,10 @@ router.get("/", (_, res) => {
   res.status(200).send({ data: "Auth Route" });
 });
 
+// ---------------------------------------------------------------------
+
+// USER ROUTES
+
 // Create a new user in the database.
 router.post("/create-user", upload.single("file"), createUser);
 
@@ -34,5 +38,7 @@ router.post("/update-user", upload.single("file"), updateUser);
 
 // Delete the user data from the database.
 router.post("/delete-user", deleteUser);
+
+// ---------------------------------------------------------------------
 
 export default router;
