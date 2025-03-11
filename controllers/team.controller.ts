@@ -36,6 +36,8 @@ export const getConstructors = async (
   }
 };
 
+// -------------------------------------------------------------------------------------------------------------------
+
 // Create a new Team
 export const createTeam = async (
   req: Request,
@@ -158,153 +160,64 @@ export const getTeamById = async (
   }
 };
 
-// Get all Teams for the user (Current user)
-export const getUserTeams = async (
+// Search for Teams in a League
+export const getTeamsInaLeague = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    const username = req?.body?.username;
+    const leagueId = req?.body?.leagueId;
     const page = req?.body?.page;
 
-    // Find user by username
-    const user = await prisma.user.findUnique({
-      where: {
-        username: username,
-      },
-      select: {
-        id: true, // Get user ID
-      },
+    // Find the league
+    const league = await prisma.league.findUnique({
+      where: { leagueId: leagueId },
     });
 
-    // If user does not exist - send an error.
-    if (!user) {
-      res.status(404).send({ data: "User not found." });
+    // If league does not exist - send an error
+    if (!league) {
+      res.status(404).send({ data: "League does not exist." });
       return;
     }
 
-    // Get teams where the user is the creator
+    // Find all teams
     const teams = await prisma.team.findMany({
       where: {
-        userId: user.id,
+        leagueId: league?.id,
       },
       select: {
         id: true,
         name: true,
         score: true,
-        createdAt: true,
-        updatedAt: true,
-        League: {
-          select: {
-            name: true,
-            leagueId: true,
-          },
+        User: {
+          select: { id: true, name: true, username: true, photoURL: true },
         },
       },
-      orderBy: {
-        updatedAt: "desc",
-      },
+      orderBy: [{ score: "desc" }, { createdAt: "asc" }],
       skip: page * 4,
       take: 4,
     });
 
-    // Check if more teams are present where the user is the creator.
+    // Check if next page exists
     const nextPageExists = await prisma.team.count({
       where: {
-        userId: user.id,
+        leagueId: league?.id,
       },
-      orderBy: {
-        updatedAt: "desc",
-      },
+      orderBy: [{ score: "desc" }, { createdAt: "asc" }],
       skip: (page + 1) * 4,
       take: 4,
     });
 
-    res
-      .status(200)
-      .send({ teams: teams, nextPage: nextPageExists != 0 ? page + 1 : null });
+    // Return the current page posts and next page number
+    res.status(200).send({
+      teams: teams,
+      nextPage: nextPageExists != 0 ? page + 1 : null,
+    });
     return;
   } catch (err) {
     console.log(err);
     res.status(500).send({ data: "Something went wrong." });
-  }
-};
-
-// Get all Public Teams for a user (Non current user)
-export const getUserPublicTeams = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  try {
-    const username = req?.body?.username;
-    const page = req?.body?.page;
-
-    // Find user by username
-    const user = await prisma.user.findUnique({
-      where: {
-        username: username,
-      },
-      select: {
-        id: true, // Get user ID
-      },
-    });
-
-    // If user does not exist - send an error.
-    if (!user) {
-      res.status(404).send({ data: "User not found." });
-      return;
-    }
-
-    // Get teams where the user is the creator
-    const teams = await prisma.team.findMany({
-      where: {
-        userId: user.id,
-        League: {
-          private: false,
-        },
-      },
-      select: {
-        id: true,
-        name: true,
-        score: true,
-        createdAt: true,
-        updatedAt: true,
-        League: {
-          select: {
-            name: true,
-            leagueId: true,
-          },
-        },
-      },
-      orderBy: {
-        updatedAt: "desc",
-      },
-      skip: page * 4,
-      take: 4,
-    });
-
-    // Check if more teams are present where the user is the creator.
-    const nextPageExists = await prisma.team.count({
-      where: {
-        userId: user.id,
-        League: {
-          private: false,
-        },
-      },
-      orderBy: {
-        updatedAt: "desc",
-      },
-      skip: (page + 1) * 4,
-      take: 4,
-    });
-
-    res
-      .status(200)
-      .send({ teams: teams, nextPage: nextPageExists != 0 ? page + 1 : null });
     return;
-  } catch (err) {
-    console.log(err);
-    res.status(500).send({ data: "Something went wrong." });
   }
 };
 
@@ -408,6 +321,8 @@ export const deleteTeam = async (
     return;
   }
 };
+
+// -------------------------------------------------------------------------------------------------------------------------
 
 // Create a new league
 export const createLeague = async (
@@ -557,6 +472,7 @@ export const getLeague = async (req: Request, res: Response): Promise<void> => {
         numberOfTeams: true,
         User: {
           select: {
+            id: true,
             name: true,
             photoURL: true,
             username: true,
@@ -579,59 +495,41 @@ export const getLeague = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-// Search for Teams in a League
-export const getTeamsInaLeague = async (
+// Update the league info
+export const updateLeague = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
+    const leagueName = req?.body?.leagueName;
+    const isPrivate = req?.body?.isPrivate;
     const leagueId = req?.body?.leagueId;
-    const page = req?.body?.page;
 
-    // Find the league
+    // Find the league to be updated
     const league = await prisma.league.findUnique({
-      where: { leagueId: leagueId },
+      where: {
+        leagueId: leagueId,
+      },
     });
 
-    // If league does not exist - send an error
+    // Send error if league does not exist
     if (!league) {
       res.status(404).send({ data: "League does not exist." });
       return;
     }
 
-    // Find all teams
-    const teams = await prisma.team.findMany({
+    // Update the league
+    const updatedLeague = await prisma.league.update({
       where: {
-        leagueId: league?.id,
+        leagueId: leagueId,
       },
-      select: {
-        id: true,
-        name: true,
-        score: true,
-        User: {
-          select: { id: true, name: true, username: true, photoURL: true },
-        },
+      data: {
+        name: leagueName,
+        private: isPrivate,
       },
-      orderBy: [{ score: "desc" }, { createdAt: "asc" }],
-      skip: page * 4,
-      take: 4,
     });
 
-    // Check if next page exists
-    const nextPageExists = await prisma.team.count({
-      where: {
-        leagueId: league?.id,
-      },
-      orderBy: [{ score: "desc" }, { createdAt: "asc" }],
-      skip: (page + 1) * 4,
-      take: 4,
-    });
-
-    // Return the current page posts and next page number
-    res.status(200).send({
-      teams: teams,
-      nextPage: nextPageExists != 0 ? page + 1 : null,
-    });
+    res.status(200).send({ data: updatedLeague });
     return;
   } catch (err) {
     console.log(err);
@@ -640,8 +538,126 @@ export const getTeamsInaLeague = async (
   }
 };
 
+// Delete the league
+export const deleteLeague = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const leagueId = req?.body?.leagueId;
+
+    // Find the league to be updated
+    const league = await prisma.league.findUnique({
+      where: {
+        leagueId: leagueId,
+      },
+    });
+
+    // Send error if league does not exist
+    if (!league) {
+      res.status(404).send({ data: "League does not exist." });
+      return;
+    }
+
+    // Delete the teams in the league
+    await prisma.team.deleteMany({
+      where: {
+        leagueId: league?.id,
+      },
+    });
+
+    // Delete the league
+    await prisma.league.delete({
+      where: {
+        id: league?.id,
+      },
+    });
+
+    res.status(200).send({ data: "League deleted." });
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ data: "Something went wrong." });
+    return;
+  }
+};
+
+// ------------------------------------------------------------------------------------------------------------------------
+
+// Get all Teams for the user (Current user)
+export const getCurrentUserTeams = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const username = req?.body?.username;
+    const page = req?.body?.page;
+
+    // Find user by username
+    const user = await prisma.user.findUnique({
+      where: {
+        username: username,
+      },
+      select: {
+        id: true, // Get user ID
+      },
+    });
+
+    // If user does not exist - send an error.
+    if (!user) {
+      res.status(404).send({ data: "User not found." });
+      return;
+    }
+
+    // Get teams where the user is the creator
+    const teams = await prisma.team.findMany({
+      where: {
+        userId: user.id,
+      },
+      select: {
+        id: true,
+        name: true,
+        score: true,
+        createdAt: true,
+        updatedAt: true,
+        League: {
+          select: {
+            name: true,
+            leagueId: true,
+          },
+        },
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+      skip: page * 4,
+      take: 4,
+    });
+
+    // Check if more teams are present where the user is the creator.
+    const nextPageExists = await prisma.team.count({
+      where: {
+        userId: user.id,
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+      skip: (page + 1) * 4,
+      take: 4,
+    });
+
+    res
+      .status(200)
+      .send({ teams: teams, nextPage: nextPageExists != 0 ? page + 1 : null });
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ data: "Something went wrong." });
+  }
+};
+
 // Get all the leagues that the user is in (participant or admin) (Current user)
-export const getUserLeagues = async (
+export const getCurrentUserLeagues = async (
   req: Request,
   res: Response
 ): Promise<void> => {
@@ -795,5 +811,176 @@ export const getUserPublicLeagues = async (
   } catch (err) {
     console.log(err);
     res.status(500).send({ data: "Something went wrong." });
+  }
+};
+
+// Get all Public Teams for a user (Non current user)
+export const getUserPublicTeams = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const username = req?.body?.username;
+    const page = req?.body?.page;
+
+    // Find user by username
+    const user = await prisma.user.findUnique({
+      where: {
+        username: username,
+      },
+      select: {
+        id: true, // Get user ID
+      },
+    });
+
+    // If user does not exist - send an error.
+    if (!user) {
+      res.status(404).send({ data: "User not found." });
+      return;
+    }
+
+    // Get teams where the user is the creator
+    const teams = await prisma.team.findMany({
+      where: {
+        userId: user.id,
+        League: {
+          private: false,
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        score: true,
+        createdAt: true,
+        updatedAt: true,
+        League: {
+          select: {
+            name: true,
+            leagueId: true,
+          },
+        },
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+      skip: page * 4,
+      take: 4,
+    });
+
+    // Check if more teams are present where the user is the creator.
+    const nextPageExists = await prisma.team.count({
+      where: {
+        userId: user.id,
+        League: {
+          private: false,
+        },
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+      skip: (page + 1) * 4,
+      take: 4,
+    });
+
+    res
+      .status(200)
+      .send({ teams: teams, nextPage: nextPageExists != 0 ? page + 1 : null });
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ data: "Something went wrong." });
+  }
+};
+
+// Find the teams in a league which belong to the current user
+export const getCurrentUserTeamsInLeague = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req?.body?.userId;
+    const leagueId = req?.body?.leagueId;
+    const page = req?.body?.page;
+
+    console.log(userId);
+
+    // Find user by id
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        id: true, // Get user ID
+      },
+    });
+
+    // If user does not exist - send an error.
+    if (!user) {
+      res.status(404).send({ data: "User not found." });
+      return;
+    }
+
+    // Find League by leagueId
+    const league = await prisma.league.findUnique({
+      where: {
+        leagueId: leagueId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    // If league does not exist - send an error.
+    if (!league) {
+      res.status(404).send({ data: "League not found." });
+      return;
+    }
+
+    // Get teams where the user is the creator
+    const teams = await prisma.team.findMany({
+      where: {
+        userId: user.id,
+        leagueId: league?.id,
+      },
+      select: {
+        id: true,
+        name: true,
+        score: true,
+        createdAt: true,
+        updatedAt: true,
+        User: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            photoURL: true,
+          },
+        },
+      },
+      orderBy: [{ score: "desc" }, { updatedAt: "desc" }],
+      skip: page * 4,
+      take: 4,
+    });
+
+    // Check if more teams are present where the user is the creator.
+    const nextPageExists = await prisma.team.count({
+      where: {
+        userId: user.id,
+        League: {
+          private: false,
+        },
+      },
+      orderBy: [{ score: "desc" }, { updatedAt: "desc" }],
+      skip: (page + 1) * 4,
+      take: 4,
+    });
+
+    res
+      .status(200)
+      .send({ teams: teams, nextPage: nextPageExists != 0 ? page + 1 : null });
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ data: "Something went wrong" });
   }
 };

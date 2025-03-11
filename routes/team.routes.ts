@@ -8,13 +8,16 @@ import {
   getPublicLeagues,
   searchPublicLeagues,
   getTeamsInaLeague,
-  getUserTeams,
-  getUserLeagues,
+  getCurrentUserTeams,
+  getCurrentUserLeagues,
   getUserPublicTeams,
   getUserPublicLeagues,
   getTeamById,
   editTeam,
   deleteTeam,
+  updateLeague,
+  deleteLeague,
+  getCurrentUserTeamsInLeague,
 } from "../controllers/team.controller.ts";
 
 // Create a router.
@@ -55,10 +58,13 @@ router.post("/delete-team", deleteTeam);
 router.post("/get-teams-in-a-league", getTeamsInaLeague);
 
 // Get Teams for a User
-router.post("/get-user-teams", getUserTeams);
+router.post("/get-user-teams", getCurrentUserTeams);
 
 // Get Public Teams for a User (non current user)
 router.post("/get-user-public-teams", getUserPublicTeams);
+
+// Get Teams in a League for a User (Current user)
+router.post("/get-user-league-teams", getCurrentUserTeamsInLeague);
 
 // ------------------------------------------------------------------
 
@@ -70,6 +76,12 @@ router.post("/create-league", createLeague);
 // Get league by Id
 router.post("/get-league", getLeague);
 
+// Update league
+router.post("/update-league", updateLeague);
+
+// Delete league
+router.post("/delete-league", deleteLeague);
+
 // Get public leagues
 router.post("/get-public-leagues", getPublicLeagues);
 
@@ -77,7 +89,7 @@ router.post("/get-public-leagues", getPublicLeagues);
 router.post("/search-public-leagues", searchPublicLeagues);
 
 // Get Leagues in which a User's teams are present
-router.post("/get-user-leagues", getUserLeagues);
+router.post("/get-user-leagues", getCurrentUserLeagues);
 
 // Get Public Leagues in which a User's teams are present (non current user)
 router.post("/get-user-public-leagues", getUserPublicLeagues);
