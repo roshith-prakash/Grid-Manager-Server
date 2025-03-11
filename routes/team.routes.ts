@@ -77,7 +77,7 @@ router.post("/create-league", createLeague);
 router.post("/get-league", getLeague);
 
 // Update league
-router.post("/update-league", updateLeague);
+router.post("/edit-league", updateLeague);
 
 // Delete league
 router.post("/delete-league", deleteLeague);

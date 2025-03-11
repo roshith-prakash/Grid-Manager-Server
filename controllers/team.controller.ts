@@ -902,8 +902,6 @@ export const getCurrentUserTeamsInLeague = async (
     const leagueId = req?.body?.leagueId;
     const page = req?.body?.page;
 
-    console.log(userId);
-
     // Find user by id
     const user = await prisma.user.findUnique({
       where: {
