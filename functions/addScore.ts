@@ -5,13 +5,14 @@ import {
   QualiResultItem,
   RaceResultItem,
 } from "../types/types.ts";
+import { updatePrices } from "./updatePrice.ts";
 
 // To auto update Race Scores
 export const updateRaceScores = async () => {
   try {
     // Get data for last race
     let apiData = await axios.get(
-      "https://api.jolpi.ca/ergast/f1/2024/last/results/"
+      "https://api.jolpi.ca/ergast/f1/current/last/results/"
     );
 
     // Check if data is present.
@@ -98,6 +99,7 @@ export const updateRaceScores = async () => {
 
         await Promise.all(updateOperations);
         console.log("Scores updated");
+        updatePrices();
       }
     }
   } catch (err) {
@@ -110,7 +112,7 @@ export const updateRaceScores = async () => {
 export const updateQualiScores = async () => {
   try {
     let apiData = await axios.get(
-      "https://api.jolpi.ca/ergast/f1/2024/last/qualifying/"
+      "https://api.jolpi.ca/ergast/f1/current/last/qualifying/"
     );
 
     if (apiData?.data?.MRData?.RaceTable?.Races?.length > 0) {
@@ -198,7 +200,7 @@ export const updateQualiScores = async () => {
 export const updateSprintScores = async () => {
   try {
     let apiData = await axios.get(
-      "https://api.jolpi.ca/ergast/f1/2024/last/sprint/"
+      "https://api.jolpi.ca/ergast/f1/current/last/sprint/"
     );
 
     if (apiData?.data?.MRData?.RaceTable?.Races?.length > 0) {
