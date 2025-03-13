@@ -16,6 +16,7 @@ import {
   updateRaceScores,
   updateSprintScores,
 } from "./functions/addScore.ts";
+import axios from "axios";
 
 // Initializing Server -------------------------------------------------------------------------------------------
 
@@ -58,6 +59,16 @@ app.use(helmet());
 // Default route to check if server is working.
 app.get("/", (_, res: Response) => {
   res.status(200).send("We are good to go!");
+  return;
+});
+
+app.get("/next-race", async (_, res: Response) => {
+  let response = await axios.get(`https://api.jolpi.ca/ergast/f1/current/next`);
+
+  let result = response?.data?.MRData?.RaceTable?.Races[0];
+
+  res.status(200).send({ nextRace: result });
+  return;
 });
 
 // Routes -----------------------------------------------------------------------------------------
