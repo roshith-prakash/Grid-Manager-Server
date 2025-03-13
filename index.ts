@@ -62,7 +62,7 @@ app.get("/", (_, res: Response) => {
   return;
 });
 
-app.get("/next-race", async (_, res: Response) => {
+app.get("/api/v1/next-race", async (_, res: Response) => {
   let response = await axios.get(`https://api.jolpi.ca/ergast/f1/current/next`);
 
   let result = response?.data?.MRData?.RaceTable?.Races[0];
