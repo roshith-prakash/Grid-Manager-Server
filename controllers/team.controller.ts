@@ -277,6 +277,7 @@ export const deleteTeam = async (
 ): Promise<void> => {
   try {
     const teamId = req.body?.teamId;
+    const userId = req?.body?.userId;
 
     const team = await prisma.team.findUnique({
       where: {
@@ -284,6 +285,7 @@ export const deleteTeam = async (
       },
       select: {
         id: true,
+        userId: true,
         League: {
           select: {
             id: true,
@@ -292,29 +294,33 @@ export const deleteTeam = async (
       },
     });
 
-    // If team is not present in DB
-    if (!team) {
-      res.status(404).send({ data: "Team does not exist." });
+    if (userId == team?.userId) {
+      // If team is not present in DB
+      if (!team) {
+        res.status(404).send({ data: "Team does not exist." });
+        return;
+      }
+
+      await prisma.league.update({
+        where: {
+          id: team?.League?.id,
+        },
+        data: {
+          numberOfTeams: { decrement: 1 },
+        },
+      });
+
+      await prisma.team.delete({
+        where: {
+          id: team?.id,
+        },
+      });
+
+      res.status(200).send({ data: "Team deleted." });
       return;
+    } else {
+      res.status(400).send({ data: "User ID does not match team user." });
     }
-
-    await prisma.league.update({
-      where: {
-        id: team?.League?.id,
-      },
-      data: {
-        numberOfTeams: { decrement: 1 },
-      },
-    });
-
-    await prisma.team.delete({
-      where: {
-        id: team?.id,
-      },
-    });
-
-    res.status(200).send({ data: "Team deleted." });
-    return;
   } catch (err) {
     console.log(err);
     res.status(500).send({ data: "Something went wrong." });
