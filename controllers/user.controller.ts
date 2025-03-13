@@ -278,39 +278,74 @@ export const updateUser = async (
   }
 };
 
-// Delete the user & any posts created by the user.
+// Delete the user & any teams + leagues created by the user.
 export const deleteUser = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    // Get username from frontend
     const username = req?.body?.username;
 
-    // Find the user from frontend
+    // Find the user along with teams and leagues
     const user = await prisma.user.findUnique({
-      where: {
-        username: username,
-      },
+      where: { username },
+      include: { teams: true }, // Get user's teams
     });
 
-    // User does not exist
     if (!user) {
       res.status(404).send({ data: "User not found." });
       return;
     }
 
-    await prisma.user.delete({
+    // Find leagues where the user is either the creator or has a team in
+    const leagues = await prisma.league.findMany({
       where: {
-        id: user?.id,
+        OR: [
+          { userId: user.id }, // User created the league
+          { teams: { some: { userId: user.id } } }, // User is part of a league
+        ],
       },
+      select: { id: true, userId: true, numberOfTeams: true }, // Select only necessary fields
     });
 
-    res.status(200).send({ data: "User deleted successfully." });
-    return;
+    const userCreatedLeagueIds = leagues
+      .filter((l) => l.userId === user.id)
+      .map((l) => l.id);
+    const userJoinedLeagueIds = leagues
+      .filter((l) => l.userId !== user.id)
+      .map((l) => l.id);
+
+    // Delete teams in leagues the user created
+    await prisma.team.deleteMany({
+      where: { leagueId: { in: userCreatedLeagueIds } },
+    });
+
+    // Delete leagues created by the user
+    await prisma.league.deleteMany({
+      where: { id: { in: userCreatedLeagueIds } },
+    });
+
+    // Delete user's own teams
+    await prisma.team.deleteMany({
+      where: { userId: user.id },
+    });
+
+    // Decrement team count for leagues where the user had a team
+    if (userJoinedLeagueIds.length > 0) {
+      await prisma.league.updateMany({
+        where: { id: { in: userJoinedLeagueIds } },
+        data: { numberOfTeams: { decrement: 1 } },
+      });
+    }
+
+    // Delete the user
+    await prisma.user.delete({ where: { id: user.id } });
+
+    res
+      .status(200)
+      .send({ data: "User and related data deleted successfully." });
   } catch (err) {
-    console.log(err);
+    console.error("Error deleting user:", err);
     res.status(500).send({ data: "Something went wrong." });
-    return;
   }
 };
