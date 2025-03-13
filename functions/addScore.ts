@@ -60,7 +60,7 @@ export const updateRaceScores = async () => {
           const constructorId = driverResult.Constructor.constructorId;
           const points =
             (Number(driverResult.points) || 0) +
-            Math.round((result?.length - index) / 2.5); // Ensure points are numeric
+            Math.round((result?.length - index) / 1.75); // Ensure points are numeric
 
           // Add driver score
           if (driverId) {
@@ -84,14 +84,14 @@ export const updateRaceScores = async () => {
             updateOperations.push(
               prisma.team.updateMany({
                 where: { constructorIds: { has: constructorId } },
-                data: { score: { increment: points } },
+                data: { score: { increment: points * 0.75 } },
               })
             );
 
             updateOperations.push(
               prisma.constructor.update({
                 where: { constructorId: constructorId },
-                data: { points: { increment: points } },
+                data: { points: { increment: points * 0.75 } },
               })
             );
           }
@@ -174,14 +174,14 @@ export const updateQualiScores = async () => {
             updateOperations.push(
               prisma.team.updateMany({
                 where: { constructorIds: { has: constructorId } },
-                data: { score: { increment: points } },
+                data: { score: { increment: points * 0.75 } },
               })
             );
 
             updateOperations.push(
               prisma.constructor.update({
                 where: { constructorId: constructorId },
-                data: { points: { increment: points } },
+                data: { points: { increment: points * 0.75 } },
               })
             );
           }
@@ -239,7 +239,7 @@ export const updateSprintScores = async () => {
             const constructorId = driverResult.Constructor.constructorId;
             const points =
               (Number(driverResult.points) || 0) +
-              Math.round((result?.length - index) / 2.5); // Ensure points are numeric
+              Math.round((result?.length - index) / 1.75); // Ensure points are numeric
 
             let updateOperations = [];
 
@@ -265,14 +265,14 @@ export const updateSprintScores = async () => {
               updateOperations.push(
                 prisma.team.updateMany({
                   where: { constructorIds: { has: constructorId } },
-                  data: { score: { increment: points } },
+                  data: { score: { increment: points * 0.75 } },
                 })
               );
 
               updateOperations.push(
                 prisma.constructor.update({
                   where: { constructorId: constructorId },
-                  data: { points: { increment: points } },
+                  data: { points: { increment: points * 0.75 } },
                 })
               );
             }
