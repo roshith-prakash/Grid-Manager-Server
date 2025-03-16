@@ -54,13 +54,17 @@ export const updateRaceScores = async () => {
 
         let updateOperations: any[] = [];
 
+        console.log(
+          `Updating Race Scores for Season : ${apiData?.data?.MRData?.RaceTable?.season} Round : ${apiData?.data?.MRData?.RaceTable?.round}....`
+        );
+
         // Loop through the result array
         result.map((driverResult: RaceResultItem, index: number) => {
           const driverId = driverResult.Driver.driverId;
           const constructorId = driverResult.Constructor.constructorId;
           const points =
             (Number(driverResult.points) || 0) +
-            Math.round((result?.length - index) / 1.75); // Ensure points are numeric
+            Math.round((result?.length - index) / 1.25); // Ensure points are numeric
 
           // Add driver score
           if (driverId) {
@@ -98,7 +102,9 @@ export const updateRaceScores = async () => {
         });
 
         await Promise.all(updateOperations);
-        console.log("Scores updated");
+        console.log(
+          `Updated Race Scores for Season : ${apiData?.data?.MRData?.RaceTable?.season} Round : ${apiData?.data?.MRData?.RaceTable?.round}....`
+        );
         updatePrices();
       }
     }
@@ -142,7 +148,9 @@ export const updateQualiScores = async () => {
           });
         }
 
-        console.log("Updating Quali Scores...");
+        console.log(
+          `Updating Quali Scores for Season : ${apiData?.data?.MRData?.RaceTable?.season} Round : ${apiData?.data?.MRData?.RaceTable?.round}....`
+        );
 
         let result =
           apiData?.data?.MRData?.RaceTable?.Races[0]?.QualifyingResults;
@@ -192,7 +200,9 @@ export const updateQualiScores = async () => {
 
         await Promise.all(updateOperations);
 
-        console.log("Updated Quali Scores!");
+        console.log(
+          `Updated Quali Scores for Season : ${apiData?.data?.MRData?.RaceTable?.season} Round : ${apiData?.data?.MRData?.RaceTable?.round}`
+        );
       }
     }
   } catch (err) {
@@ -238,6 +248,10 @@ export const updateSprintScores = async () => {
 
         let updateOperations: any[] = [];
 
+        console.log(
+          `Updating Sprint Scores for Season : ${apiData?.data?.MRData?.RaceTable?.season} Round : ${apiData?.data?.MRData?.RaceTable?.round}....`
+        );
+
         result.map(async (driverResult: SprintResultItem, index: number) => {
           const driverId = driverResult.Driver.driverId;
           const constructorId = driverResult.Constructor.constructorId;
@@ -282,6 +296,9 @@ export const updateSprintScores = async () => {
           }
         });
 
+        console.log(
+          `Updated Sprint Scores for Season : ${apiData?.data?.MRData?.RaceTable?.season} Round : ${apiData?.data?.MRData?.RaceTable?.round}....`
+        );
         await Promise.all(updateOperations);
       }
     }
