@@ -56,6 +56,9 @@ model Constructor {
   price             Int      @default(0)
   // Points scored in the season
   points            Int      @default(0)
+  // Images
+  logo              String?
+  carImage          String?
   // Created & updated times
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
