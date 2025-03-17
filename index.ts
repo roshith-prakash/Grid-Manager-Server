@@ -2,7 +2,8 @@ import http from "http";
 import dotenv from "dotenv";
 import helmet from "helmet";
 import cors, { CorsOptions } from "cors";
-import express, { Response } from "express";
+import express, { NextFunction, Response } from "express";
+import { redisClient } from "./utils/redis.ts";
 
 dotenv.config();
 
@@ -62,14 +63,40 @@ app.get("/", (_, res: Response) => {
   return;
 });
 
-app.get("/api/v1/next-race", async (_, res: Response) => {
-  let response = await axios.get(`https://api.jolpi.ca/ergast/f1/current/next`);
+// Get Next Race
+app.get(
+  "/api/v1/next-race",
+  // MiddleWare to check if data exists in REDIS
+  async (_, res: Response, next: NextFunction) => {
+    const result = await redisClient.get(`next-race`);
 
-  let result = response?.data?.MRData?.RaceTable?.Races[0];
+    if (result) {
+      // If value was present, convert to JSON and send result
+      res.status(200).send(JSON.parse(result));
+      return;
+    } else {
+      next();
+    }
+  },
+  // Function to run in REDIS data is unavailable (controller)
+  async (_, res: Response) => {
+    let response = await axios.get(
+      `https://api.jolpi.ca/ergast/f1/current/next`
+    );
 
-  res.status(200).send({ nextRace: result });
-  return;
-});
+    let result = response?.data?.MRData?.RaceTable?.Races[0];
+
+    // 12 hour cache duration
+    await redisClient.setEx(
+      `next-race`,
+      60 * 60 * 12,
+      JSON.stringify({ nextRace: result })
+    );
+
+    res.status(200).send({ nextRace: result });
+    return;
+  }
+);
 
 // Routes -----------------------------------------------------------------------------------------
 
