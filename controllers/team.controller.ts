@@ -2,6 +2,8 @@ import { prisma } from "../utils/primsaClient.ts";
 import { Request, Response } from "express";
 import { generateLeagueUID } from "../utils/generateLeagueUID.ts";
 
+// ---------------------------------------------------------------------------------------------------------------------
+
 // Get Drivers based on Drivers Standings
 export const getDrivers = async (
   req: Request,
@@ -39,6 +41,7 @@ export const getConstructors = async (
 // -------------------------------------------------------------------------------------------------------------------
 
 // Create a new Team
+
 export const createTeam = async (
   req: Request,
   res: Response
@@ -331,6 +334,7 @@ export const deleteTeam = async (
 // -------------------------------------------------------------------------------------------------------------------------
 
 // Create a new league
+
 export const createLeague = async (
   req: Request,
   res: Response
@@ -748,6 +752,7 @@ export const getUserPublicLeagues = async (
   try {
     const username = req?.body?.username;
     const page = req?.body?.page;
+    const currentUserId = req?.body?.currentUserId;
 
     // Find user by username
     const user = await prisma.user.findUnique({
@@ -769,10 +774,18 @@ export const getUserPublicLeagues = async (
     const leagues = await prisma.league.findMany({
       where: {
         OR: [
-          { userId: user.id }, // User created the league
-          { teams: { some: { userId: user.id } } }, // User is part of a league via a team
+          {
+            private: false, // Public leagues (open for all)
+            OR: [
+              { userId: user.id }, // User created the league
+              { teams: { some: { userId: user.id } } }, // User is part of a team in the league
+            ],
+          },
+          {
+            private: true, // Private leagues (only if user has a team)
+            teams: { some: { userId: currentUserId } },
+          },
         ],
-        private: false,
       },
       select: {
         id: true,
@@ -799,10 +812,18 @@ export const getUserPublicLeagues = async (
     const nextPageExists = await prisma.league.count({
       where: {
         OR: [
-          { userId: user.id }, // User created the league
-          { teams: { some: { userId: user.id } } }, // User is part of a league via a team
+          {
+            private: false, // Public leagues (open for all)
+            OR: [
+              { userId: user.id }, // User created the league
+              { teams: { some: { userId: user.id } } }, // User is part of a team in the league
+            ],
+          },
+          {
+            private: true, // Private leagues (only if user has a team)
+            teams: { some: { userId: currentUserId } },
+          },
         ],
-        private: false,
       },
       orderBy: { numberOfTeams: "desc" },
       skip: page * 4,
@@ -828,6 +849,7 @@ export const getUserPublicTeams = async (
   try {
     const username = req?.body?.username;
     const page = req?.body?.page;
+    const currentUserId = req?.body?.currentUserId;
 
     // Find user by username
     const user = await prisma.user.findUnique({
@@ -848,10 +870,24 @@ export const getUserPublicTeams = async (
     // Get teams where the user is the creator
     const teams = await prisma.team.findMany({
       where: {
-        userId: user.id,
-        League: {
-          private: false,
-        },
+        AND: [
+          { userId: user.id }, // The user owns the team
+          {
+            OR: [
+              {
+                League: { private: false }, // Public leagues are always allowed
+              },
+              {
+                League: {
+                  private: true, // Private leagues must have currentUserId present
+                  teams: {
+                    some: { userId: currentUserId }, // Ensure currentUserId has a team in this league
+                  },
+                },
+              },
+            ],
+          },
+        ],
       },
       select: {
         id: true,
@@ -876,15 +912,29 @@ export const getUserPublicTeams = async (
     // Check if more teams are present where the user is the creator.
     const nextPageExists = await prisma.team.count({
       where: {
-        userId: user.id,
-        League: {
-          private: false,
-        },
+        AND: [
+          { userId: user.id }, // The user owns the team
+          {
+            OR: [
+              {
+                League: { private: false }, // Public leagues are always allowed
+              },
+              {
+                League: {
+                  private: true, // Private leagues must have currentUserId present
+                  teams: {
+                    some: { userId: currentUserId }, // Ensure currentUserId has a team in this league
+                  },
+                },
+              },
+            ],
+          },
+        ],
       },
       orderBy: {
         updatedAt: "desc",
       },
-      skip: (page + 1) * 4,
+      skip: page * 4,
       take: 4,
     });
 
