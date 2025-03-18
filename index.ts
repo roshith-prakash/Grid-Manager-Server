@@ -1,4 +1,5 @@
 import http from "http";
+import axios from "axios";
 import dotenv from "dotenv";
 import helmet from "helmet";
 import cors, { CorsOptions } from "cors";
@@ -17,7 +18,6 @@ import {
   updateRaceScores,
   updateSprintScores,
 } from "./functions/addScore.ts";
-import axios from "axios";
 
 // Initializing Server -------------------------------------------------------------------------------------------
 
@@ -98,19 +98,53 @@ app.get(
   }
 );
 
+// Updating scores (cached via redis so that Jolpica API rate limits arent hit)
+app.get(
+  "/api/v1/update-scores",
+  // MiddleWare to check if update score was already called
+  async (_, res: Response, next: NextFunction) => {
+    const result = await redisClient.get(`update-scores`);
+
+    if (result) {
+      // If value was present, convert to JSON and send result
+      res.status(200).send(JSON.parse(result));
+      return;
+    } else {
+      next();
+    }
+  },
+  // Function to update score
+  async (_, res: Response) => {
+    try {
+      updateQualiScores();
+      updateSprintScores();
+      updateRaceScores();
+
+      // Caching for 3 hours
+      await redisClient.setEx(
+        `update-scores`,
+        60 * 60 * 3,
+        JSON.stringify({ data: "Scores updated" })
+      );
+
+      res.status(200).send({ data: "Scores updated" });
+      return;
+    } catch (err) {
+      res.status(500).send({ data: "Could not update score." });
+      return;
+    }
+  }
+);
+
 // Routes -----------------------------------------------------------------------------------------
 
 // Auth Routes
 app.use("/api/v1/user", userRouter);
+// Team + League routes
 app.use("/api/v1/team", teamRouter);
-
-// Updating scores when server loads (cannot use Scheduling with Serverless infrastructure)
-updateQualiScores();
-updateSprintScores();
-updateRaceScores();
 
 // Listening on PORT -------------------------------------------------------------------------------------------
 
-server.listen(process.env.PORT, () => {
-  console.log(`Server running on port ${process.env.PORT}`);
+server.listen(process.env.PORT || 4000, () => {
+  console.log(`Server running on port ${process.env.PORT || 4000}`);
 });

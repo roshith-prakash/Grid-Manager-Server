@@ -84,7 +84,7 @@ model User {
   League      League[]
 }
 
-// Fantasy team that is created by the user - contains 3 drivers & 2 constructors
+// Fantasy team that is created by the user - contains 5 drivers & 2 constructors
 model Team {
   id               String   @id @default(auto()) @map("_id") @db.ObjectId
   // User who has created the team (player)
