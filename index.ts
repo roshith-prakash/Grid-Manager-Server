@@ -116,9 +116,9 @@ app.get(
   // Function to update score
   async (_, res: Response) => {
     try {
-      updateQualiScores();
-      updateSprintScores();
-      updateRaceScores();
+      await updateQualiScores();
+      await updateSprintScores();
+      await updateRaceScores();
 
       // Caching for 3 hours
       await redisClient.setEx(
