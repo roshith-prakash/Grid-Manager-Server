@@ -1255,6 +1255,7 @@ export const getMostSelectedDrivers = async (req: Request, res: Response) => {
   try {
     const drivers = await prisma.driver.findMany({
       orderBy: [{ chosenPercentage: "desc" }, { points: "desc" }],
+      take: 3,
     });
 
     res.status(200).send({ drivers: drivers });
@@ -1273,6 +1274,7 @@ export const getMostSelectedConstructors = async (
   try {
     const constructors = await prisma.constructor.findMany({
       orderBy: [{ chosenPercentage: "desc" }, { points: "desc" }],
+      take: 3,
     });
 
     res.status(200).send({ constructors: constructors });
@@ -1288,6 +1290,7 @@ export const getHighestScoringDrivers = async (req: Request, res: Response) => {
   try {
     const drivers = await prisma.driver.findMany({
       orderBy: [{ points: "desc" }],
+      take: 3,
     });
 
     res.status(200).send({ drivers: drivers });
@@ -1306,6 +1309,7 @@ export const getHighestScoringConstructors = async (
   try {
     const constructors = await prisma.constructor.findMany({
       orderBy: [{ points: "desc" }],
+      take: 3,
     });
 
     res.status(200).send({ constructors: constructors });
