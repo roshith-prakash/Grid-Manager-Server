@@ -4,6 +4,8 @@ import { generateLeagueUID } from "../utils/generateLeagueUID.ts";
 
 // ---------------------------------------------------------------------------------------------------------------------
 
+// DRIVERS & CONSTRUCTORS
+
 // Get Drivers based on Drivers Standings
 export const getDrivers = async (
   req: Request,
@@ -40,8 +42,9 @@ export const getConstructors = async (
 
 // -------------------------------------------------------------------------------------------------------------------
 
-// Create a new Team
+// Team Functions
 
+// Create a new Team
 export const createTeam = async (
   req: Request,
   res: Response
@@ -54,30 +57,33 @@ export const createTeam = async (
     const leagueId = req?.body?.leagueId;
     const price = req?.body?.price;
 
+    // Find User
     const userinDB = await prisma.user.findUnique({
       where: {
         firebaseUID: user?.firebaseUID,
       },
     });
 
-    // If user is not present in DB
+    // User is not present
     if (!userinDB) {
       res.status(404).send({ data: "User does not exist." });
       return;
     }
 
+    // Find league
     const league = await prisma.league.findUnique({
       where: {
         leagueId: leagueId,
       },
     });
 
-    // If league is not present in DB
+    // League is not present
     if (!league) {
       res.status(404).send({ data: "League does not exist." });
       return;
     }
 
+    // Get Driver & constructor Ids
     const selectedDrivers = teamDrivers.map((item: any) => item?.driverId);
     const selectedConstructors = teamConstructors.map(
       (item: any) => item?.constructorId
@@ -99,10 +105,58 @@ export const createTeam = async (
       },
     });
 
+    const totalTeamCount = await prisma.team.count();
+
     await prisma.league.update({
       where: { id: league?.id },
       data: { numberOfTeams: { increment: 1 } },
     });
+
+    // Update driver chosen percentage for all drivers
+    const allDrivers = await prisma.driver.findMany();
+    await Promise.all(
+      allDrivers.map(async (driver) => {
+        const teamWithDriverCount = await prisma.team.count({
+          where: {
+            driverIds: {
+              has: driver.driverId,
+            },
+          },
+        });
+
+        const chosenPercentage =
+          totalTeamCount > 0 ? (teamWithDriverCount / totalTeamCount) * 100 : 0;
+
+        await prisma.driver.update({
+          where: { driverId: driver.driverId },
+          data: { chosenPercentage },
+        });
+      })
+    );
+
+    // Update constructor chosen percentage
+    const allConstructors = await prisma.constructor.findMany();
+    await Promise.all(
+      allConstructors.map(async (constructor) => {
+        const teamWithConstructorCount = await prisma.team.count({
+          where: {
+            constructorIds: {
+              has: constructor.constructorId,
+            },
+          },
+        });
+
+        const chosenPercentage =
+          totalTeamCount > 0
+            ? (teamWithConstructorCount / totalTeamCount) * 100
+            : 0;
+
+        await prisma.constructor.update({
+          where: { constructorId: constructor.constructorId },
+          data: { chosenPercentage },
+        });
+      })
+    );
 
     res.status(200).send({ data: createdTeam });
     return;
@@ -264,6 +318,54 @@ export const editTeam = async (req: Request, res: Response): Promise<void> => {
       },
     });
 
+    const totalTeamCount = await prisma.team.count();
+
+    // Update driver chosen percentage for all drivers
+    const allDrivers = await prisma.driver.findMany();
+    await Promise.all(
+      allDrivers.map(async (driver) => {
+        const teamWithDriverCount = await prisma.team.count({
+          where: {
+            driverIds: {
+              has: driver.driverId,
+            },
+          },
+        });
+
+        const chosenPercentage =
+          totalTeamCount > 0 ? (teamWithDriverCount / totalTeamCount) * 100 : 0;
+
+        await prisma.driver.update({
+          where: { driverId: driver.driverId },
+          data: { chosenPercentage },
+        });
+      })
+    );
+
+    // Update constructor chosen percentage
+    const allConstructors = await prisma.constructor.findMany();
+    await Promise.all(
+      allConstructors.map(async (constructor) => {
+        const teamWithConstructorCount = await prisma.team.count({
+          where: {
+            constructorIds: {
+              has: constructor.constructorId,
+            },
+          },
+        });
+
+        const chosenPercentage =
+          totalTeamCount > 0
+            ? (teamWithConstructorCount / totalTeamCount) * 100
+            : 0;
+
+        await prisma.constructor.update({
+          where: { constructorId: constructor.constructorId },
+          data: { chosenPercentage },
+        });
+      })
+    );
+
     res.status(200).send({ data: editedTeam });
     return;
   } catch (err) {
@@ -297,13 +399,15 @@ export const deleteTeam = async (
       },
     });
 
-    if (userId == team?.userId) {
-      // If team is not present in DB
-      if (!team) {
-        res.status(404).send({ data: "Team does not exist." });
-        return;
-      }
+    // If team is not present in DB
+    if (!team) {
+      res.status(404).send({ data: "Team does not exist." });
+      return;
+    }
 
+    // User ID must be same as user ID in team
+    if (userId == team?.userId) {
+      // Update League
       await prisma.league.update({
         where: {
           id: team?.League?.id,
@@ -313,16 +417,68 @@ export const deleteTeam = async (
         },
       });
 
+      // Delete Team
       await prisma.team.delete({
         where: {
           id: team?.id,
         },
       });
 
+      const totalTeamCount = await prisma.team.count();
+
+      // Update driver chosen percentage for all drivers
+      const allDrivers = await prisma.driver.findMany();
+      await Promise.all(
+        allDrivers.map(async (driver) => {
+          const teamWithDriverCount = await prisma.team.count({
+            where: {
+              driverIds: {
+                has: driver.driverId,
+              },
+            },
+          });
+
+          const chosenPercentage =
+            totalTeamCount > 0
+              ? (teamWithDriverCount / totalTeamCount) * 100
+              : 0;
+
+          await prisma.driver.update({
+            where: { driverId: driver.driverId },
+            data: { chosenPercentage },
+          });
+        })
+      );
+
+      // Update constructor chosen percentage
+      const allConstructors = await prisma.constructor.findMany();
+      await Promise.all(
+        allConstructors.map(async (constructor) => {
+          const teamWithConstructorCount = await prisma.team.count({
+            where: {
+              constructorIds: {
+                has: constructor.constructorId,
+              },
+            },
+          });
+
+          const chosenPercentage =
+            totalTeamCount > 0
+              ? (teamWithConstructorCount / totalTeamCount) * 100
+              : 0;
+
+          await prisma.constructor.update({
+            where: { constructorId: constructor.constructorId },
+            data: { chosenPercentage },
+          });
+        })
+      );
+
       res.status(200).send({ data: "Team deleted." });
       return;
     } else {
       res.status(400).send({ data: "User ID does not match team user." });
+      return;
     }
   } catch (err) {
     console.log(err);
@@ -333,8 +489,9 @@ export const deleteTeam = async (
 
 // -------------------------------------------------------------------------------------------------------------------------
 
-// Create a new league
+// League Functions
 
+// Create a new league
 export const createLeague = async (
   req: Request,
   res: Response
@@ -583,6 +740,54 @@ export const deleteLeague = async (
       },
     });
 
+    const totalTeamCount = await prisma.team.count();
+
+    // Update driver chosen percentage for all drivers
+    const allDrivers = await prisma.driver.findMany();
+    await Promise.all(
+      allDrivers.map(async (driver) => {
+        const teamWithDriverCount = await prisma.team.count({
+          where: {
+            driverIds: {
+              has: driver.driverId,
+            },
+          },
+        });
+
+        const chosenPercentage =
+          totalTeamCount > 0 ? (teamWithDriverCount / totalTeamCount) * 100 : 0;
+
+        await prisma.driver.update({
+          where: { driverId: driver.driverId },
+          data: { chosenPercentage },
+        });
+      })
+    );
+
+    // Update constructor chosen percentage
+    const allConstructors = await prisma.constructor.findMany();
+    await Promise.all(
+      allConstructors.map(async (constructor) => {
+        const teamWithConstructorCount = await prisma.team.count({
+          where: {
+            constructorIds: {
+              has: constructor.constructorId,
+            },
+          },
+        });
+
+        const chosenPercentage =
+          totalTeamCount > 0
+            ? (teamWithConstructorCount / totalTeamCount) * 100
+            : 0;
+
+        await prisma.constructor.update({
+          where: { constructorId: constructor.constructorId },
+          data: { chosenPercentage },
+        });
+      })
+    );
+
     res.status(200).send({ data: "League deleted." });
     return;
   } catch (err) {
@@ -593,6 +798,8 @@ export const deleteLeague = async (
 };
 
 // ------------------------------------------------------------------------------------------------------------------------
+
+// View Teams & Leagues for a user
 
 // Get all Teams for the user (Current user)
 export const getCurrentUserTeams = async (
@@ -1032,6 +1239,92 @@ export const getCurrentUserTeamsInLeague = async (
     res
       .status(200)
       .send({ teams: teams, nextPage: nextPageExists != 0 ? page + 1 : null });
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ data: "Something went wrong" });
+  }
+};
+
+// ------------------------------------------------------------------------------------------------------------------------
+
+// Leaderboard Functions
+
+// Find drivers - sorted by most chosen
+export const getMostSelectedDrivers = async (req: Request, res: Response) => {
+  try {
+    const drivers = await prisma.driver.findMany({
+      orderBy: [{ chosenPercentage: "desc" }, { points: "desc" }],
+    });
+
+    res.status(200).send({ drivers: drivers });
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ data: "Something went wrong" });
+  }
+};
+
+// Find constructors - sorted by most chosen
+export const getMostSelectedConstructors = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const constructors = await prisma.constructor.findMany({
+      orderBy: [{ chosenPercentage: "desc" }, { points: "desc" }],
+    });
+
+    res.status(200).send({ constructors: constructors });
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ data: "Something went wrong" });
+  }
+};
+
+// Find drivers - sorted by highest scoring
+export const getHighestScoringDrivers = async (req: Request, res: Response) => {
+  try {
+    const drivers = await prisma.driver.findMany({
+      orderBy: [{ points: "desc" }],
+    });
+
+    res.status(200).send({ drivers: drivers });
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ data: "Something went wrong" });
+  }
+};
+
+// Find constructors - sorted by highest scoring
+export const getHighestScoringConstructors = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const constructors = await prisma.constructor.findMany({
+      orderBy: [{ points: "desc" }],
+    });
+
+    res.status(200).send({ constructors: constructors });
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ data: "Something went wrong" });
+  }
+};
+
+// Get the top 3 teams across all leagues
+export const getTop3Teams = async (req: Request, res: Response) => {
+  try {
+    const teams = await prisma.team.findMany({
+      orderBy: { score: "desc" },
+      take: 3,
+    });
+
+    res.status(200).send({ teams: teams });
     return;
   } catch (err) {
     console.log(err);

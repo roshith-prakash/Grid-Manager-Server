@@ -18,6 +18,11 @@ import {
   updateLeague,
   deleteLeague,
   getCurrentUserTeamsInLeague,
+  getMostSelectedDrivers,
+  getMostSelectedConstructors,
+  getHighestScoringDrivers,
+  getHighestScoringConstructors,
+  getTop3Teams,
 } from "../controllers/team.controller.ts";
 
 // Create a router.
@@ -93,6 +98,25 @@ router.post("/get-user-leagues", getCurrentUserLeagues);
 
 // Get Public Leagues in which a User's teams are present (non current user)
 router.post("/get-user-public-leagues", getUserPublicLeagues);
+
+// ------------------------------------------------------------------
+
+// Leaderboard Routes
+
+// Get the most select drivers
+router.get("/get-most-selected-drivers", getMostSelectedDrivers);
+
+// Get the most select constructors
+router.get("/get-most-selected-constructors", getMostSelectedConstructors);
+
+// Get the highest scoring drivers
+router.get("/get-highest-scoring-drivers", getHighestScoringDrivers);
+
+// Get the highest scoring constructors
+router.get("/get-highest-scoring-constructors", getHighestScoringConstructors);
+
+// Get top 3 teams
+router.get("/get-top-3-teams", getTop3Teams);
 
 // ------------------------------------------------------------------
 

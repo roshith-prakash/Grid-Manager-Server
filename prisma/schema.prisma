@@ -38,6 +38,8 @@ model Driver {
   constructor       String
   // Constructor color
   constructor_color String
+  // Percentage of teams in which the driver is present
+  chosenPercentage  Float    @default(0)
   // Created & updated times
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -59,6 +61,8 @@ model Constructor {
   // Images
   logo              String?
   carImage          String?
+  // Percentage of teams in which the constructor is present
+  chosenPercentage  Float    @default(0)
   // Created & updated times
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
