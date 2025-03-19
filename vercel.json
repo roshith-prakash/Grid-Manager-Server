@@ -11,10 +11,5 @@
       "src": "/(.*)",
       "dest": "dist/index.js"
     }
-  ],
-  "functions": {
-    "api/v1/update-scores": {
-      "maxDuration": 120
-    }
-  }
+  ]
 }
