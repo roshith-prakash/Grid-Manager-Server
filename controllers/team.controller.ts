@@ -1,6 +1,7 @@
 import { prisma } from "../utils/primsaClient.ts";
 import { Request, Response } from "express";
 import { generateLeagueUID } from "../utils/generateLeagueUID.ts";
+import { Constructor, Driver } from "@prisma/client";
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -89,20 +90,51 @@ export const createTeam = async (
       (item: any) => item?.constructorId
     );
 
-    teamDrivers?.forEach((item: any) => (item.points = 0));
-    teamConstructors?.forEach((item: any) => (item.points = 0));
-
     const createdTeam = await prisma.team.create({
       data: {
         name: teamName,
-        teamDrivers: teamDrivers,
-        teamConstructors: teamConstructors,
         driverIds: selectedDrivers,
         constructorIds: selectedConstructors,
         userId: userinDB?.id,
         leagueId: league?.id,
         price: price,
       },
+    });
+
+    teamDrivers?.map(async (driver: Driver) => {
+      await prisma.driverInTeam.create({
+        data: {
+          teamId: createdTeam?.id,
+          driverId: driver?.driverId,
+          permanentNumber: Number(driver?.permanentNumber),
+          code: driver?.code,
+          price: driver?.price,
+          pointsForTeam: 0,
+          teamPointsHistory: [],
+          constructor_name: driver?.constructor_name,
+          constructor_color: driver?.constructor_color,
+          familyName: driver?.familyName,
+          givenName: driver?.givenName,
+          image: driver?.image,
+          countryCode: driver?.countryCode,
+        },
+      });
+    });
+
+    teamConstructors?.map(async (constructor: Constructor) => {
+      await prisma.constructorInTeam.create({
+        data: {
+          teamId: createdTeam?.id,
+          constructorNumber: constructor?.constructorNumber,
+          constructorId: constructor?.constructorId,
+          name: constructor?.name,
+          price: constructor?.price,
+          pointsForTeam: 0,
+          teamPointsHistory: [],
+          logo: constructor?.logo,
+          carImage: constructor?.carImage,
+        },
+      });
     });
 
     const totalTeamCount = await prisma.team.count();
@@ -158,7 +190,15 @@ export const createTeam = async (
       })
     );
 
-    res.status(200).send({ data: createdTeam });
+    const team = await prisma.team.findUnique({
+      where: { id: createdTeam?.id },
+      include: {
+        teamConstructors: true,
+        teamDrivers: true,
+      },
+    });
+
+    res.status(200).send({ data: team });
     return;
   } catch (err) {
     console.log(err);
@@ -304,18 +344,87 @@ export const editTeam = async (req: Request, res: Response): Promise<void> => {
       (item: any) => item?.constructorId
     );
 
+    const newDrivers = teamDrivers?.filter(
+      (driver: Driver) => !team?.driverIds?.includes(driver?.driverId)
+    );
+
+    const newConstructors: Constructor[] = teamConstructors?.filter(
+      (constructor: Constructor) =>
+        !team?.constructorIds?.includes(constructor?.constructorId)
+    );
+
+    const removedDrivers = team?.driverIds?.filter(
+      (driver: string) => !selectedDrivers.includes(driver)
+    );
+
+    const removedConstructors = team?.constructorIds?.filter(
+      (constructor: string) => !selectedConstructors.includes(constructor)
+    );
+
     const editedTeam = await prisma.team.update({
       where: {
         id: teamId,
       },
       data: {
         name: teamName,
-        teamDrivers: teamDrivers,
-        teamConstructors: teamConstructors,
         driverIds: selectedDrivers,
         constructorIds: selectedConstructors,
         price: price,
       },
+    });
+
+    newDrivers?.map(async (driver: Driver) => {
+      await prisma.driverInTeam.create({
+        data: {
+          teamId: editedTeam?.id,
+          driverId: driver?.driverId,
+          permanentNumber: Number(driver?.permanentNumber),
+          code: driver?.code,
+          price: driver?.price,
+          pointsForTeam: 0,
+          teamPointsHistory: [],
+          constructor_name: driver?.constructor_name,
+          constructor_color: driver?.constructor_color,
+          familyName: driver?.familyName,
+          givenName: driver?.givenName,
+          image: driver?.image,
+          countryCode: driver?.countryCode,
+        },
+      });
+    });
+
+    newConstructors?.map(async (constructor: Constructor) => {
+      await prisma.constructorInTeam.create({
+        data: {
+          teamId: editedTeam?.id,
+          constructorNumber: constructor?.constructorNumber,
+          constructorId: constructor?.constructorId,
+          name: constructor?.name,
+          price: constructor?.price,
+          pointsForTeam: 0,
+          teamPointsHistory: [],
+          logo: constructor?.logo,
+          carImage: constructor?.carImage,
+        },
+      });
+    });
+
+    removedDrivers?.map(async (driver) => {
+      await prisma.driverInTeam.delete({
+        where: {
+          teamId: editedTeam?.id,
+          driverId: driver,
+        },
+      });
+    });
+
+    removedConstructors?.map(async (constructorId) => {
+      await prisma.constructorInTeam.delete({
+        where: {
+          teamId: editedTeam?.id,
+          constructorId: constructorId,
+        },
+      });
     });
 
     const totalTeamCount = await prisma.team.count();
@@ -415,6 +524,14 @@ export const deleteTeam = async (
         data: {
           numberOfTeams: { decrement: 1 },
         },
+      });
+
+      await prisma.driverInTeam.deleteMany({
+        where: { teamId: team?.id },
+      });
+
+      await prisma.constructorInTeam.deleteMany({
+        where: { teamId: team?.id },
       });
 
       // Delete Team
@@ -725,6 +842,26 @@ export const deleteLeague = async (
       res.status(404).send({ data: "League does not exist." });
       return;
     }
+
+    const teams = await prisma.team.findMany({
+      where: {
+        leagueId: league?.id,
+      },
+    });
+
+    teams?.map(async (team) => {
+      await prisma.driverInTeam.deleteMany({
+        where: {
+          teamId: team?.id,
+        },
+      });
+
+      await prisma.constructorInTeam.deleteMany({
+        where: {
+          teamId: team?.id,
+        },
+      });
+    });
 
     // Delete the teams in the league
     await prisma.team.deleteMany({

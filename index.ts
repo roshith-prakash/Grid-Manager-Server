@@ -17,7 +17,7 @@ import {
   updateQualiScores,
   updateRaceScores,
   updateSprintScores,
-} from "./functions/addScore.ts";
+} from "./functions/updateScore.ts";
 
 // Initializing Server -------------------------------------------------------------------------------------------
 

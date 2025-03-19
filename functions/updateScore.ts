@@ -62,12 +62,15 @@ export const updateRaceScores = async () => {
         result.map((driverResult: RaceResultItem, index: number) => {
           const driverId = driverResult.Driver.driverId;
           const constructorId = driverResult.Constructor.constructorId;
+          const round = apiData?.data?.MRData?.RaceTable?.round;
+          const raceName = apiData?.data?.MRData?.RaceTable?.Races[0]?.raceName;
           const points =
             (Number(driverResult.points) || 0) +
             Math.round((result?.length - index) / 1.25); // Ensure points are numeric
 
           // Add driver score
           if (driverId) {
+            // Update points for team
             updateOperations.push(
               prisma.team.updateMany({
                 where: { driverIds: { has: driverId } },
@@ -75,16 +78,46 @@ export const updateRaceScores = async () => {
               })
             );
 
+            // Update points for drivers in Teams
+            updateOperations.push(
+              prisma.driverInTeam.updateMany({
+                where: { driverId: driverId },
+                data: {
+                  pointsForTeam: { increment: points },
+                  teamPointsHistory: {
+                    push: {
+                      round: round,
+                      raceName: raceName,
+                      session: "Race",
+                      points: points,
+                    },
+                  },
+                },
+              })
+            );
+
+            // Update points for the Main driver table
             updateOperations.push(
               prisma.driver.update({
                 where: { driverId: driverId },
-                data: { points: { increment: points } },
+                data: {
+                  points: { increment: points },
+                  pointsHistory: {
+                    push: {
+                      round: round,
+                      raceName: raceName,
+                      session: "Race",
+                      points: points,
+                    },
+                  },
+                },
               })
             );
           }
 
           // Add constructor score
           if (constructorId) {
+            // Update points for team
             updateOperations.push(
               prisma.team.updateMany({
                 where: { constructorIds: { has: constructorId } },
@@ -92,19 +125,50 @@ export const updateRaceScores = async () => {
               })
             );
 
+            // Update points for constructors in Teams
+            updateOperations.push(
+              prisma.constructorInTeam.updateMany({
+                where: { constructorId: constructorId },
+                data: {
+                  pointsForTeam: { increment: Math.round(points * 0.75) },
+                  teamPointsHistory: {
+                    push: {
+                      round: round,
+                      raceName: raceName,
+                      session: "Race",
+                      points: Math.round(points * 0.75),
+                    },
+                  },
+                },
+              })
+            );
+
+            // Update points for the Main constructor table
             updateOperations.push(
               prisma.constructor.update({
                 where: { constructorId: constructorId },
-                data: { points: { increment: Math.round(points * 0.75) } },
+                data: {
+                  points: { increment: Math.round(points * 0.75) },
+                  pointsHistory: {
+                    push: {
+                      round: round,
+                      raceName: raceName,
+                      session: "Race",
+                      points: Math.round(points * 0.75),
+                    },
+                  },
+                },
               })
             );
           }
         });
 
         await Promise.all(updateOperations);
+
         console.log(
           `Updated Race Scores for Season : ${apiData?.data?.MRData?.RaceTable?.season} Round : ${apiData?.data?.MRData?.RaceTable?.round}....`
         );
+
         updatePrices();
       }
     }
@@ -149,7 +213,7 @@ export const updateQualiScores = async () => {
         }
 
         console.log(
-          `Updating Quali Scores for Season : ${apiData?.data?.MRData?.RaceTable?.season} Round : ${apiData?.data?.MRData?.RaceTable?.round}....`
+          `Updating Qualifying Scores for Season : ${apiData?.data?.MRData?.RaceTable?.season} Round : ${apiData?.data?.MRData?.RaceTable?.round}....`
         );
 
         let result =
@@ -161,10 +225,13 @@ export const updateQualiScores = async () => {
         result.map((driverResult: QualiResultItem, index: number) => {
           const driverId = driverResult.Driver.driverId;
           const constructorId = driverResult.Constructor.constructorId;
+          const round = apiData?.data?.MRData?.RaceTable?.round;
+          const raceName = apiData?.data?.MRData?.RaceTable?.Races[0]?.raceName;
           const points = Math.round((result?.length - index) / 1.5); // Ensure points are numeric
 
           // Add driver score
           if (driverId) {
+            // Update points for team
             updateOperations.push(
               prisma.team.updateMany({
                 where: { driverIds: { has: driverId } },
@@ -172,16 +239,46 @@ export const updateQualiScores = async () => {
               })
             );
 
+            // Update points for drivers in Teams
+            updateOperations.push(
+              prisma.driverInTeam.updateMany({
+                where: { driverId: driverId },
+                data: {
+                  pointsForTeam: { increment: points },
+                  teamPointsHistory: {
+                    push: {
+                      round: round,
+                      raceName: raceName,
+                      session: "Qualifying",
+                      points: points,
+                    },
+                  },
+                },
+              })
+            );
+
+            // Update points for the Main driver table
             updateOperations.push(
               prisma.driver.update({
                 where: { driverId: driverId },
-                data: { points: { increment: points } },
+                data: {
+                  points: { increment: points },
+                  pointsHistory: {
+                    push: {
+                      round: round,
+                      raceName: raceName,
+                      session: "Qualifying",
+                      points: points,
+                    },
+                  },
+                },
               })
             );
           }
 
           // Add constructor score
           if (constructorId) {
+            // Update points for team
             updateOperations.push(
               prisma.team.updateMany({
                 where: { constructorIds: { has: constructorId } },
@@ -189,10 +286,39 @@ export const updateQualiScores = async () => {
               })
             );
 
+            // Update points for constructors in Teams
+            updateOperations.push(
+              prisma.constructorInTeam.updateMany({
+                where: { constructorId: constructorId },
+                data: {
+                  pointsForTeam: { increment: Math.round(points * 0.75) },
+                  teamPointsHistory: {
+                    push: {
+                      round: round,
+                      raceName: raceName,
+                      session: "Qualifying",
+                      points: Math.round(points * 0.75),
+                    },
+                  },
+                },
+              })
+            );
+
+            // Update points for the Main constructor table
             updateOperations.push(
               prisma.constructor.update({
                 where: { constructorId: constructorId },
-                data: { points: { increment: Math.round(points * 0.75) } },
+                data: {
+                  points: { increment: Math.round(points * 0.75) },
+                  pointsHistory: {
+                    push: {
+                      round: round,
+                      raceName: raceName,
+                      session: "Qualifying",
+                      points: Math.round(points * 0.75),
+                    },
+                  },
+                },
               })
             );
           }
@@ -201,7 +327,7 @@ export const updateQualiScores = async () => {
         await Promise.all(updateOperations);
 
         console.log(
-          `Updated Quali Scores for Season : ${apiData?.data?.MRData?.RaceTable?.season} Round : ${apiData?.data?.MRData?.RaceTable?.round}`
+          `Updated Qualifying Scores for Season : ${apiData?.data?.MRData?.RaceTable?.season} Round : ${apiData?.data?.MRData?.RaceTable?.round}`
         );
       }
     }
@@ -255,14 +381,17 @@ export const updateSprintScores = async () => {
         result.map(async (driverResult: SprintResultItem, index: number) => {
           const driverId = driverResult.Driver.driverId;
           const constructorId = driverResult.Constructor.constructorId;
+          const round = apiData?.data?.MRData?.RaceTable?.round;
+          const raceName = apiData?.data?.MRData?.RaceTable?.Races[0]?.raceName;
           const points =
             (Number(driverResult.points) || 0) +
-            Math.round((result?.length - index) / 1.75); // Ensure points are numeric
+            Math.round((result?.length - index) / 1.5); // Ensure points are numeric
 
           let updateOperations = [];
 
           // Add driver score
           if (driverId) {
+            // Update points for team
             updateOperations.push(
               prisma.team.updateMany({
                 where: { driverIds: { has: driverId } },
@@ -270,16 +399,46 @@ export const updateSprintScores = async () => {
               })
             );
 
+            // Update points for drivers in Teams
+            updateOperations.push(
+              prisma.driverInTeam.updateMany({
+                where: { driverId: driverId },
+                data: {
+                  pointsForTeam: { increment: points },
+                  teamPointsHistory: {
+                    push: {
+                      round: round,
+                      raceName: raceName,
+                      session: "Sprint",
+                      points: points,
+                    },
+                  },
+                },
+              })
+            );
+
+            // Update points for the Main driver table
             updateOperations.push(
               prisma.driver.update({
                 where: { driverId: driverId },
-                data: { points: { increment: points } },
+                data: {
+                  points: { increment: points },
+                  pointsHistory: {
+                    push: {
+                      round: round,
+                      raceName: raceName,
+                      session: "Sprint",
+                      points: points,
+                    },
+                  },
+                },
               })
             );
           }
 
           // Add constructor score
           if (constructorId) {
+            // Update points for team
             updateOperations.push(
               prisma.team.updateMany({
                 where: { constructorIds: { has: constructorId } },
@@ -287,10 +446,39 @@ export const updateSprintScores = async () => {
               })
             );
 
+            // Update points for constructors in Teams
+            updateOperations.push(
+              prisma.constructorInTeam.updateMany({
+                where: { constructorId: constructorId },
+                data: {
+                  pointsForTeam: { increment: Math.round(points * 0.75) },
+                  teamPointsHistory: {
+                    push: {
+                      round: round,
+                      raceName: raceName,
+                      session: "Sprint",
+                      points: Math.round(points * 0.75),
+                    },
+                  },
+                },
+              })
+            );
+
+            // Update points for the Main constructor table
             updateOperations.push(
               prisma.constructor.update({
                 where: { constructorId: constructorId },
-                data: { points: { increment: Math.round(points * 0.75) } },
+                data: {
+                  points: { increment: Math.round(points * 0.75) },
+                  pointsHistory: {
+                    push: {
+                      round: round,
+                      raceName: raceName,
+                      session: "Sprint",
+                      points: Math.round(points * 0.75),
+                    },
+                  },
+                },
               })
             );
           }

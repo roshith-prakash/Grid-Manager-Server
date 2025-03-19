@@ -24,6 +24,8 @@ model Driver {
   price             Int      @default(0)
   // Points scored in the season
   points            Int      @default(0)
+  // Points History
+  pointsHistory     Json[]
   // First Name
   givenName         String
   // Last Name
@@ -35,11 +37,45 @@ model Driver {
   // Driver Number (Car number)
   permanentNumber   Int
   // Team for which the driver drives
-  constructor       String
+  constructor_name  String
   // Constructor color
   constructor_color String
   // Percentage of teams in which the driver is present
   chosenPercentage  Float    @default(0)
+  // Created & updated times
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model DriverInTeam {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  // Driver ID - usually last name
+  driverId          String   @unique
+  // 3 Letter driver code
+  code              String
+  // Price
+  price             Int      @default(0)
+  // Points scored for the Team
+  pointsForTeam     Int      @default(0)
+  // Points History
+  teamPointsHistory Json[]
+  // First Name
+  givenName         String
+  // Last Name
+  familyName        String
+  // Image of the driver
+  image             String
+  // Nationality of driver
+  countryCode       String?
+  // Driver Number (Car number)
+  permanentNumber   Int
+  // Team for which the driver drives
+  constructor_name  String
+  // Constructor color
+  constructor_color String
+  // Team
+  Team              Team?    @relation(fields: [teamId], references: [id])
+  teamId            String?  @db.ObjectId
   // Created & updated times
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -58,9 +94,38 @@ model Constructor {
   price             Int      @default(0)
   // Points scored in the season
   points            Int      @default(0)
+  // Points History
+  pointsHistory     Json[]
   // Images
   logo              String?
   carImage          String?
+  // Percentage of teams in which the constructor is present
+  chosenPercentage  Float    @default(0)
+  // Created & updated times
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model ConstructorInTeam {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  // Constructor number (required for DND)
+  constructorNumber Int
+  // Constructor Id
+  constructorId     String   @unique
+  // Constructor name
+  name              String
+  // Price
+  price             Int      @default(0)
+  // Points scored for the Team
+  pointsForTeam     Int      @default(0)
+  // Points History
+  teamPointsHistory Json[]
+  // Images
+  logo              String?
+  carImage          String?
+  // Team
+  Team              Team?    @relation(fields: [teamId], references: [id])
+  teamId            String?  @db.ObjectId
   // Percentage of teams in which the constructor is present
   chosenPercentage  Float    @default(0)
   // Created & updated times
@@ -90,29 +155,29 @@ model User {
 
 // Fantasy team that is created by the user - contains 5 drivers & 2 constructors
 model Team {
-  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  id               String              @id @default(auto()) @map("_id") @db.ObjectId
   // User who has created the team (player)
-  User             User?    @relation(fields: [userId], references: [id])
+  User             User?               @relation(fields: [userId], references: [id])
   // ID of user who has created the team (player)
-  userId           String?  @db.ObjectId
+  userId           String?             @db.ObjectId
   name             String?
   // Selected Drivers
-  teamDrivers      Json[]
+  teamDrivers      DriverInTeam[]
   // Selected Constructors 
-  teamConstructors Json[]
+  teamConstructors ConstructorInTeam[]
   // Selected Driver IDs for filtering
-  driverIds        String[] @default([])
+  driverIds        String[]            @default([])
   // Selected Driver IDs for filtering
-  constructorIds   String[] @default([])
+  constructorIds   String[]            @default([])
   // The price for the team
-  price            Int      @default(0)
+  price            Int                 @default(0)
   // Score
-  score            Int      @default(0)
+  score            Int                 @default(0)
   // Created & updated times
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  League           League?  @relation(fields: [leagueId], references: [id])
-  leagueId         String?  @db.ObjectId
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  League           League?             @relation(fields: [leagueId], references: [id])
+  leagueId         String?             @db.ObjectId
 }
 
 // League in which teams are added
