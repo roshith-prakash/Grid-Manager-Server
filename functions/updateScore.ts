@@ -54,6 +54,10 @@ export const updateRaceScores = async () => {
 
         let updateOperations: any[] = [];
 
+        const round = apiData?.data?.MRData?.RaceTable?.round;
+        const raceName = apiData?.data?.MRData?.RaceTable?.Races[0]?.raceName;
+        const constructorPoints: { [key: string]: number } = {};
+
         console.log(
           `Updating Race Scores for Season : ${apiData?.data?.MRData?.RaceTable?.season} Round : ${apiData?.data?.MRData?.RaceTable?.round}....`
         );
@@ -62,8 +66,6 @@ export const updateRaceScores = async () => {
         result.map((driverResult: RaceResultItem, index: number) => {
           const driverId = driverResult.Driver.driverId;
           const constructorId = driverResult.Constructor.constructorId;
-          const round = apiData?.data?.MRData?.RaceTable?.round;
-          const raceName = apiData?.data?.MRData?.RaceTable?.Races[0]?.raceName;
           const points =
             (Number(driverResult.points) || 0) +
             Math.round((result?.length - index) / 1.25); // Ensure points are numeric
@@ -115,13 +117,22 @@ export const updateRaceScores = async () => {
             );
           }
 
-          // Add constructor score
-          if (constructorId) {
+          // Add constructor points to an array
+          if (constructorPoints[constructorId]) {
+            constructorPoints[constructorId] =
+              constructorPoints[constructorId] + Math.round(points * 0.75);
+          } else {
+            constructorPoints[constructorId] = Math.round(points * 0.75);
+          }
+        });
+
+        Object.entries(constructorPoints)?.map(
+          async ([constructorId, points]) => {
             // Update points for team
             updateOperations.push(
               prisma.team.updateMany({
                 where: { constructorIds: { has: constructorId } },
-                data: { score: { increment: Math.round(points * 0.75) } },
+                data: { score: { increment: points } },
               })
             );
 
@@ -130,13 +141,13 @@ export const updateRaceScores = async () => {
               prisma.constructorInTeam.updateMany({
                 where: { constructorId: constructorId },
                 data: {
-                  pointsForTeam: { increment: Math.round(points * 0.75) },
+                  pointsForTeam: { increment: points },
                   teamPointsHistory: {
                     push: {
                       round: round,
                       raceName: raceName,
                       session: "Race",
-                      points: Math.round(points * 0.75),
+                      points: points,
                     },
                   },
                 },
@@ -148,20 +159,20 @@ export const updateRaceScores = async () => {
               prisma.constructor.update({
                 where: { constructorId: constructorId },
                 data: {
-                  points: { increment: Math.round(points * 0.75) },
+                  points: { increment: points },
                   pointsHistory: {
                     push: {
                       round: round,
                       raceName: raceName,
                       session: "Race",
-                      points: Math.round(points * 0.75),
+                      points: points,
                     },
                   },
                 },
               })
             );
           }
-        });
+        );
 
         await Promise.all(updateOperations);
 
@@ -221,12 +232,15 @@ export const updateQualiScores = async () => {
 
         let updateOperations: any[] = [];
 
+        const round = apiData?.data?.MRData?.RaceTable?.round;
+        const raceName = apiData?.data?.MRData?.RaceTable?.Races[0]?.raceName;
+        const constructorPoints: { [key: string]: number } = {};
+
         // Map through the result
         result.map((driverResult: QualiResultItem, index: number) => {
           const driverId = driverResult.Driver.driverId;
           const constructorId = driverResult.Constructor.constructorId;
-          const round = apiData?.data?.MRData?.RaceTable?.round;
-          const raceName = apiData?.data?.MRData?.RaceTable?.Races[0]?.raceName;
+
           const points = Math.round((result?.length - index) / 1.5); // Ensure points are numeric
 
           // Add driver score
@@ -276,13 +290,22 @@ export const updateQualiScores = async () => {
             );
           }
 
-          // Add constructor score
-          if (constructorId) {
+          // Add constructor points to an array
+          if (constructorPoints[constructorId]) {
+            constructorPoints[constructorId] =
+              constructorPoints[constructorId] + Math.round(points * 0.75);
+          } else {
+            constructorPoints[constructorId] = Math.round(points * 0.75);
+          }
+        });
+
+        Object.entries(constructorPoints)?.map(
+          async ([constructorId, points]) => {
             // Update points for team
             updateOperations.push(
               prisma.team.updateMany({
                 where: { constructorIds: { has: constructorId } },
-                data: { score: { increment: Math.round(points * 0.75) } },
+                data: { score: { increment: points } },
               })
             );
 
@@ -291,13 +314,13 @@ export const updateQualiScores = async () => {
               prisma.constructorInTeam.updateMany({
                 where: { constructorId: constructorId },
                 data: {
-                  pointsForTeam: { increment: Math.round(points * 0.75) },
+                  pointsForTeam: { increment: points },
                   teamPointsHistory: {
                     push: {
                       round: round,
                       raceName: raceName,
                       session: "Qualifying",
-                      points: Math.round(points * 0.75),
+                      points: points,
                     },
                   },
                 },
@@ -309,20 +332,20 @@ export const updateQualiScores = async () => {
               prisma.constructor.update({
                 where: { constructorId: constructorId },
                 data: {
-                  points: { increment: Math.round(points * 0.75) },
+                  points: { increment: points },
                   pointsHistory: {
                     push: {
                       round: round,
                       raceName: raceName,
                       session: "Qualifying",
-                      points: Math.round(points * 0.75),
+                      points: points,
                     },
                   },
                 },
               })
             );
           }
-        });
+        );
 
         await Promise.all(updateOperations);
 
@@ -374,6 +397,10 @@ export const updateSprintScores = async () => {
 
         let updateOperations: any[] = [];
 
+        const round = apiData?.data?.MRData?.RaceTable?.round;
+        const raceName = apiData?.data?.MRData?.RaceTable?.Races[0]?.raceName;
+        const constructorPoints: { [key: string]: number } = {};
+
         console.log(
           `Updating Sprint Scores for Season : ${apiData?.data?.MRData?.RaceTable?.season} Round : ${apiData?.data?.MRData?.RaceTable?.round}....`
         );
@@ -381,8 +408,7 @@ export const updateSprintScores = async () => {
         result.map(async (driverResult: SprintResultItem, index: number) => {
           const driverId = driverResult.Driver.driverId;
           const constructorId = driverResult.Constructor.constructorId;
-          const round = apiData?.data?.MRData?.RaceTable?.round;
-          const raceName = apiData?.data?.MRData?.RaceTable?.Races[0]?.raceName;
+
           const points =
             (Number(driverResult.points) || 0) +
             Math.round((result?.length - index) / 1.5); // Ensure points are numeric
@@ -436,13 +462,22 @@ export const updateSprintScores = async () => {
             );
           }
 
-          // Add constructor score
-          if (constructorId) {
+          // Add constructor points to an array
+          if (constructorPoints[constructorId]) {
+            constructorPoints[constructorId] =
+              constructorPoints[constructorId] + Math.round(points * 0.75);
+          } else {
+            constructorPoints[constructorId] = Math.round(points * 0.75);
+          }
+        });
+
+        Object.entries(constructorPoints)?.map(
+          async ([constructorId, points]) => {
             // Update points for team
             updateOperations.push(
               prisma.team.updateMany({
                 where: { constructorIds: { has: constructorId } },
-                data: { score: { increment: Math.round(points * 0.75) } },
+                data: { score: { increment: points } },
               })
             );
 
@@ -451,13 +486,13 @@ export const updateSprintScores = async () => {
               prisma.constructorInTeam.updateMany({
                 where: { constructorId: constructorId },
                 data: {
-                  pointsForTeam: { increment: Math.round(points * 0.75) },
+                  pointsForTeam: { increment: points },
                   teamPointsHistory: {
                     push: {
                       round: round,
                       raceName: raceName,
                       session: "Sprint",
-                      points: Math.round(points * 0.75),
+                      points: points,
                     },
                   },
                 },
@@ -469,20 +504,20 @@ export const updateSprintScores = async () => {
               prisma.constructor.update({
                 where: { constructorId: constructorId },
                 data: {
-                  points: { increment: Math.round(points * 0.75) },
+                  points: { increment: points },
                   pointsHistory: {
                     push: {
                       round: round,
                       raceName: raceName,
                       session: "Sprint",
-                      points: Math.round(points * 0.75),
+                      points: points,
                     },
                   },
                 },
               })
             );
           }
-        });
+        );
 
         console.log(
           `Updated Sprint Scores for Season : ${apiData?.data?.MRData?.RaceTable?.season} Round : ${apiData?.data?.MRData?.RaceTable?.round}....`
