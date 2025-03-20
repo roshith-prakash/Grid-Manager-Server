@@ -50,7 +50,7 @@ model Driver {
 model DriverInTeam {
   id                String   @id @default(auto()) @map("_id") @db.ObjectId
   // Driver ID - usually last name
-  driverId          String   @unique
+  driverId          String
   // 3 Letter driver code
   code              String
   // Price
@@ -111,7 +111,7 @@ model ConstructorInTeam {
   // Constructor number (required for DND)
   constructorNumber Int
   // Constructor Id
-  constructorId     String   @unique
+  constructorId     String
   // Constructor name
   name              String
   // Price
