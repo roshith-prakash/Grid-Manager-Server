@@ -18,6 +18,7 @@ import {
   updateRaceScores,
   updateSprintScores,
 } from "./functions/updateScore.ts";
+import { updatePrices } from "./functions/updatePrice.ts";
 
 // Initializing Server -------------------------------------------------------------------------------------------
 
@@ -131,6 +132,22 @@ app.get(
       return;
     } catch (err) {
       res.status(500).send({ data: "Could not update score." });
+      return;
+    }
+  }
+);
+
+// Updating prices3
+app.get(
+  "/api/v1/update-prices",
+  // Function to update score
+  async (_, res: Response) => {
+    try {
+      await updatePrices();
+      res.status(200).send({ data: "Prices updated" });
+      return;
+    } catch (err) {
+      res.status(500).send({ data: "Could not update price." });
       return;
     }
   }

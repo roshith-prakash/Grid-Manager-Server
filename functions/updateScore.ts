@@ -5,7 +5,6 @@ import {
   QualiResultItem,
   RaceResultItem,
 } from "../types/types.ts";
-import { updatePrices } from "./updatePrice.ts";
 
 // To auto update Race Scores
 export const updateRaceScores = async () => {
@@ -68,7 +67,12 @@ export const updateRaceScores = async () => {
           const constructorId = driverResult.Constructor.constructorId;
           const points =
             (Number(driverResult.points) || 0) +
-            Math.round((result?.length - index) / 1.25); // Ensure points are numeric
+            Math.round((result?.length - index) / 1.25) +
+            Math.round(
+              (Number(driverResult?.grid) - Number(driverResult?.position)) *
+                1.05
+            );
+          // Ensure points are numeric
 
           // Add driver score
           if (driverId) {
@@ -179,8 +183,6 @@ export const updateRaceScores = async () => {
         console.log(
           `Updated Race Scores for Season : ${apiData?.data?.MRData?.RaceTable?.season} Round : ${apiData?.data?.MRData?.RaceTable?.round}....`
         );
-
-        updatePrices();
       }
     }
   } catch (err) {
@@ -241,7 +243,7 @@ export const updateQualiScores = async () => {
           const driverId = driverResult.Driver.driverId;
           const constructorId = driverResult.Constructor.constructorId;
 
-          const points = Math.round((result?.length - index) / 1.5); // Ensure points are numeric
+          const points = Math.round((result?.length - index) / 1.3); // Ensure points are numeric
 
           // Add driver score
           if (driverId) {
@@ -411,7 +413,11 @@ export const updateSprintScores = async () => {
 
           const points =
             (Number(driverResult.points) || 0) +
-            Math.round((result?.length - index) / 1.5); // Ensure points are numeric
+            Math.round((result?.length - index) / 1.5) +
+            Math.round(
+              (Number(driverResult?.grid) - Number(driverResult?.position)) *
+                1.05
+            );
 
           let updateOperations = [];
 
