@@ -410,7 +410,7 @@ export const editTeam = async (req: Request, res: Response): Promise<void> => {
     });
 
     removedDrivers?.map(async (driver) => {
-      await prisma.driverInTeam.delete({
+      await prisma.driverInTeam.deleteMany({
         where: {
           teamId: editedTeam?.id,
           driverId: driver,
@@ -419,7 +419,7 @@ export const editTeam = async (req: Request, res: Response): Promise<void> => {
     });
 
     removedConstructors?.map(async (constructorId) => {
-      await prisma.constructorInTeam.delete({
+      await prisma.constructorInTeam.deleteMany({
         where: {
           teamId: editedTeam?.id,
           constructorId: constructorId,
@@ -686,14 +686,30 @@ export const searchPublicLeagues = async (
   try {
     const searchTerm = req?.body?.searchTerm;
     const page = req?.body?.page;
+    const userId = req?.body?.userId;
 
     // Find all leagues
     const leagues = await prisma.league.findMany({
       where: {
-        private: false,
         OR: [
-          { leagueId: { contains: searchTerm, mode: "insensitive" } },
-          { name: { contains: searchTerm, mode: "insensitive" } },
+          {
+            userId: userId,
+          },
+          {
+            private: false,
+            OR: [
+              { leagueId: { contains: searchTerm, mode: "insensitive" } },
+              { name: { contains: searchTerm, mode: "insensitive" } },
+            ],
+          },
+          {
+            private: true,
+            teams: { some: { userId: userId } },
+            OR: [
+              { leagueId: { contains: searchTerm, mode: "insensitive" } },
+              { name: { contains: searchTerm, mode: "insensitive" } },
+            ],
+          },
         ],
       },
       select: {
@@ -717,8 +733,24 @@ export const searchPublicLeagues = async (
     const nextPageExists = await prisma.league.count({
       where: {
         OR: [
-          { leagueId: { contains: searchTerm, mode: "insensitive" } },
-          { name: { contains: searchTerm, mode: "insensitive" } },
+          {
+            userId: userId,
+          },
+          {
+            private: false,
+            OR: [
+              { leagueId: { contains: searchTerm, mode: "insensitive" } },
+              { name: { contains: searchTerm, mode: "insensitive" } },
+            ],
+          },
+          {
+            private: true,
+            teams: { some: { userId: userId } },
+            OR: [
+              { leagueId: { contains: searchTerm, mode: "insensitive" } },
+              { name: { contains: searchTerm, mode: "insensitive" } },
+            ],
+          },
         ],
       },
       orderBy: { numberOfTeams: "desc" },
@@ -1127,7 +1159,10 @@ export const getUserPublicLeagues = async (
           },
           {
             private: true, // Private leagues (only if user has a team)
-            teams: { some: { userId: currentUserId } },
+            AND: [
+              { teams: { some: { userId: user?.id } } },
+              { teams: { some: { userId: currentUserId } } },
+            ],
           },
         ],
       },
