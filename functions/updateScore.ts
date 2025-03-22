@@ -70,7 +70,7 @@ export const updateRaceScores = async () => {
             Math.round((result?.length - index) / 1.25) +
             Math.round(
               (Number(driverResult?.grid) - Number(driverResult?.position)) *
-                1.05
+                0.6
             );
           // Ensure points are numeric
 
@@ -366,7 +366,7 @@ export const updateQualiScores = async () => {
 export const updateSprintScores = async () => {
   try {
     let apiData = await axios.get(
-      "https://api.jolpi.ca/ergast/f1/current/last/sprint/"
+      "https://api.jolpi.ca/ergast/f1/current/next/sprint/"
     );
 
     if (apiData?.data?.MRData?.RaceTable?.Races?.length > 0) {
@@ -416,10 +416,8 @@ export const updateSprintScores = async () => {
             Math.round((result?.length - index) / 1.5) +
             Math.round(
               (Number(driverResult?.grid) - Number(driverResult?.position)) *
-                1.05
+                0.6
             );
-
-          let updateOperations = [];
 
           // Add driver score
           if (driverId) {
@@ -525,10 +523,11 @@ export const updateSprintScores = async () => {
           }
         );
 
+        await Promise.all(updateOperations);
+
         console.log(
           `Updated Sprint Scores for Season : ${apiData?.data?.MRData?.RaceTable?.season} Round : ${apiData?.data?.MRData?.RaceTable?.round}....`
         );
-        await Promise.all(updateOperations);
       }
     }
   } catch (err) {

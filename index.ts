@@ -117,8 +117,8 @@ app.get(
   // Function to update score
   async (_, res: Response) => {
     try {
-      await updateQualiScores();
       await updateSprintScores();
+      await updateQualiScores();
       await updateRaceScores();
 
       // Caching for 3 hours
@@ -137,7 +137,7 @@ app.get(
   }
 );
 
-// Updating prices3
+// Updating prices
 app.get(
   "/api/v1/update-prices",
   // Function to update score
