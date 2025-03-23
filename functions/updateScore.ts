@@ -21,7 +21,7 @@ export const updateRaceScores = async () => {
 
       //   If the last race (API) is not the same as the data in the DB - (New Data is Present)
       if (
-        lastRace?.season != apiData?.data?.MRData?.RaceTable?.season &&
+        lastRace?.season != apiData?.data?.MRData?.RaceTable?.season ||
         lastRace?.round != apiData?.data?.MRData?.RaceTable?.round
       ) {
         // Data is present in the DB
@@ -195,14 +195,19 @@ export const updateRaceScores = async () => {
 export const updateQualiScores = async () => {
   try {
     let apiData = await axios.get(
-      "https://api.jolpi.ca/ergast/f1/current/last/qualifying/"
+      "https://api.jolpi.ca/ergast/f1/current/next/qualifying"
+    );
+
+    console.log(
+      apiData?.data?.MRData?.RaceTable?.season,
+      apiData?.data?.MRData?.RaceTable?.round
     );
 
     if (apiData?.data?.MRData?.RaceTable?.Races?.length > 0) {
       const lastQualifying = await prisma.lastQualifying.findFirst();
 
       if (
-        lastQualifying?.season != apiData?.data?.MRData?.RaceTable?.season &&
+        lastQualifying?.season != apiData?.data?.MRData?.RaceTable?.season ||
         lastQualifying?.round != apiData?.data?.MRData?.RaceTable?.round
       ) {
         // Update the last qualifying session
@@ -373,7 +378,7 @@ export const updateSprintScores = async () => {
       const lastSprint = await prisma.lastSprint.findFirst();
 
       if (
-        lastSprint?.season != apiData?.data?.MRData?.RaceTable?.season &&
+        lastSprint?.season != apiData?.data?.MRData?.RaceTable?.season ||
         lastSprint?.round != apiData?.data?.MRData?.RaceTable?.round
       ) {
         if (lastSprint) {
