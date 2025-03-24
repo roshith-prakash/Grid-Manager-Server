@@ -23,6 +23,8 @@ import {
   getHighestScoringDrivers,
   getHighestScoringConstructors,
   getTop3Teams,
+  getDriverStats,
+  getConstructorStats,
 } from "../controllers/team.controller.ts";
 
 // Create a router.
@@ -42,6 +44,12 @@ router.get("/get-drivers", getDrivers);
 
 // Get the Constructors
 router.get("/get-constructors", getConstructors);
+
+// Get the Drivers
+router.post("/get-drivers-stats", getDriverStats);
+
+// Get the Constructors
+router.post("/get-constructors-stats", getConstructorStats);
 
 // ------------------------------------------------------------------
 

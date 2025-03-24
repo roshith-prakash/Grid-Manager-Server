@@ -13,7 +13,21 @@ export const getDrivers = async (
   res: Response
 ): Promise<void> => {
   try {
-    let drivers = await prisma.driver.findMany();
+    let drivers = await prisma.driver.findMany({
+      select: {
+        id: true,
+        code: true,
+        constructor_color: true,
+        constructor_name: true,
+        driverId: true,
+        permanentNumber: true,
+        points: true,
+        price: true,
+        image: true,
+        familyName: true,
+        givenName: true,
+      },
+    });
 
     res.status(200).send({ drivers: drivers });
     return;
@@ -33,6 +47,84 @@ export const getConstructors = async (
     let constructors = await prisma.constructor.findMany();
 
     res.status(200).send({ constructors: constructors });
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ data: "Something went wrong." });
+    return;
+  }
+};
+
+// Get Driver statistics
+export const getDriverStats = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const driverId = req?.body?.driverId;
+
+    let driver = await prisma.driver.findUnique({
+      where: {
+        id: driverId,
+      },
+    });
+
+    if (!driver) {
+      let driver = await prisma.driverInTeam.findUnique({
+        where: {
+          id: driverId,
+        },
+      });
+
+      if (!driver) {
+        res.status(404).send({ data: "Driver not found!" });
+        return;
+      }
+
+      res.status(200).send({ driver: driver });
+      return;
+    }
+
+    res.status(200).send({ driver: driver });
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ data: "Something went wrong." });
+    return;
+  }
+};
+
+// Get Driver statistics
+export const getConstructorStats = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const constructorId = req?.body?.constructorId;
+
+    let constructor = await prisma.constructor.findUnique({
+      where: {
+        id: constructorId,
+      },
+    });
+
+    if (!constructor) {
+      let constructor = await prisma.constructorInTeam.findUnique({
+        where: {
+          id: constructorId,
+        },
+      });
+
+      if (!constructor) {
+        res.status(404).send({ data: "Constructor not found!" });
+        return;
+      }
+
+      res.status(200).send({ constructor: constructor });
+      return;
+    }
+
+    res.status(200).send({ constructor: constructor });
     return;
   } catch (err) {
     console.log(err);
@@ -216,7 +308,7 @@ export const getTeamById = async (
     const teamId = req?.body?.teamId;
 
     if (!teamId) {
-      res.status(404).send({ data: "Team ID required" });
+      res.status(404).send({ data: "Team ID required." });
       return;
     }
 
@@ -229,8 +321,8 @@ export const getTeamById = async (
         name: true,
         driverIds: true,
         constructorIds: true,
-        teamConstructors: true,
-        teamDrivers: true,
+        teamConstructors: { orderBy: { pointsForTeam: "desc" } },
+        teamDrivers: { orderBy: { pointsForTeam: "desc" } },
         price: true,
         score: true,
         League: {

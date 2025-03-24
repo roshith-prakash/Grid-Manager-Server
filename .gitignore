@@ -5,3 +5,4 @@ data
 nodemon.json
 .vercel
 test.*
+.vscode

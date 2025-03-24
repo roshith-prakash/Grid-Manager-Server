@@ -11,7 +11,7 @@ export const updateRaceScores = async () => {
   try {
     // Get data for last race
     let apiData = await axios.get(
-      "https://api.jolpi.ca/ergast/f1/current/last/results/"
+      "https://api.jolpi.ca/ergast/f1/current/next/results/"
     );
 
     // Check if data is present.
