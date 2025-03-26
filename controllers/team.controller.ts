@@ -62,30 +62,44 @@ export const getDriverStats = async (
 ): Promise<void> => {
   try {
     const driverId = req?.body?.driverId;
+    const userId = req?.body?.userId;
+    const teamId = req?.body?.teamId;
 
     let driver = await prisma.driver.findUnique({
       where: {
-        id: driverId,
+        driverId: driverId,
       },
     });
 
     if (!driver) {
-      let driver = await prisma.driverInTeam.findUnique({
-        where: {
-          id: driverId,
-        },
-      });
-
-      if (!driver) {
-        res.status(404).send({ data: "Driver not found!" });
-        return;
-      }
-
-      res.status(200).send({ driver: driver });
+      res.status(404).send({ data: "Driver not found!" });
       return;
     }
 
+    // If the driver is present in the team of the user
+    if (teamId && userId) {
+      // Find the driver in team
+      let userDriver = await prisma.driverInTeam.findFirst({
+        where: {
+          driverId: driverId,
+          teamId: teamId,
+          Team: {
+            userId: userId,
+          },
+        },
+      });
+
+      // If driver in team is found
+      if (userDriver) {
+        // @ts-ignore
+        driver.pointsForTeam = userDriver?.pointsForTeam;
+        // @ts-ignore
+        driver.teamPointsHistory = userDriver?.teamPointsHistory;
+      }
+    }
+
     res.status(200).send({ driver: driver });
+
     return;
   } catch (err) {
     console.log(err);
@@ -101,27 +115,40 @@ export const getConstructorStats = async (
 ): Promise<void> => {
   try {
     const constructorId = req?.body?.constructorId;
+    const userId = req?.body?.userId;
+    const teamId = req?.body?.teamId;
 
     let constructor = await prisma.constructor.findUnique({
       where: {
-        id: constructorId,
+        constructorId: constructorId,
       },
     });
 
     if (!constructor) {
-      let constructor = await prisma.constructorInTeam.findUnique({
+      res.status(404).send({ data: "Constructor not found." });
+      return;
+    }
+
+    // If the driver is present in the team of the user
+    if (teamId && userId) {
+      // Find the driver in team
+      let userConstructor = await prisma.constructorInTeam.findFirst({
         where: {
-          id: constructorId,
+          constructorId: constructorId,
+          teamId: teamId,
+          Team: {
+            userId: userId,
+          },
         },
       });
 
-      if (!constructor) {
-        res.status(404).send({ data: "Constructor not found!" });
-        return;
+      // If driver in team is found
+      if (userConstructor) {
+        // @ts-ignore
+        constructor.pointsForTeam = userConstructor?.pointsForTeam;
+        // @ts-ignore
+        constructor.teamPointsHistory = userConstructor?.teamPointsHistory;
       }
-
-      res.status(200).send({ constructor: constructor });
-      return;
     }
 
     res.status(200).send({ constructor: constructor });
@@ -307,11 +334,13 @@ export const getTeamById = async (
   try {
     const teamId = req?.body?.teamId;
 
+    // If team Id is not passed in request.
     if (!teamId) {
       res.status(404).send({ data: "Team ID required." });
       return;
     }
 
+    // Find team in Database
     const team = await prisma.team.findUnique({
       where: {
         id: teamId,
@@ -332,14 +361,24 @@ export const getTeamById = async (
             private: true,
           },
         },
+        User: {
+          select: {
+            name: true,
+            username: true,
+            photoURL: true,
+          },
+        },
       },
     });
 
+    // If team exists.
     if (team) {
       res.status(200).send({ team: team });
       return;
-    } else {
-      res.status(404).send({ data: "Team ID required" });
+    }
+    // If team does not exist.
+    else {
+      res.status(404).send({ data: "Team not found" });
       return;
     }
   } catch (err) {
