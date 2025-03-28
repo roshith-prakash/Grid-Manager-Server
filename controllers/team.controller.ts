@@ -648,89 +648,81 @@ export const deleteTeam = async (
       return;
     }
 
-    // User ID must be same as user ID in team
-    if (userId == team?.userId) {
-      // Update League
-      await prisma.league.update({
-        where: {
-          id: team?.League?.id,
-        },
-        data: {
-          numberOfTeams: { decrement: 1 },
-        },
-      });
+    // Update League
+    await prisma.league.update({
+      where: {
+        id: team?.League?.id,
+      },
+      data: {
+        numberOfTeams: { decrement: 1 },
+      },
+    });
 
-      await prisma.driverInTeam.deleteMany({
-        where: { teamId: team?.id },
-      });
+    await prisma.driverInTeam.deleteMany({
+      where: { teamId: team?.id },
+    });
 
-      await prisma.constructorInTeam.deleteMany({
-        where: { teamId: team?.id },
-      });
+    await prisma.constructorInTeam.deleteMany({
+      where: { teamId: team?.id },
+    });
 
-      // Delete Team
-      await prisma.team.delete({
-        where: {
-          id: team?.id,
-        },
-      });
+    // Delete Team
+    await prisma.team.delete({
+      where: {
+        id: team?.id,
+      },
+    });
 
-      const totalTeamCount = await prisma.team.count();
+    const totalTeamCount = await prisma.team.count();
 
-      // Update driver chosen percentage for all drivers
-      const allDrivers = await prisma.driver.findMany();
-      await Promise.all(
-        allDrivers.map(async (driver) => {
-          const teamWithDriverCount = await prisma.team.count({
-            where: {
-              driverIds: {
-                has: driver.driverId,
-              },
+    // Update driver chosen percentage for all drivers
+    const allDrivers = await prisma.driver.findMany();
+    await Promise.all(
+      allDrivers.map(async (driver) => {
+        const teamWithDriverCount = await prisma.team.count({
+          where: {
+            driverIds: {
+              has: driver.driverId,
             },
-          });
+          },
+        });
 
-          const chosenPercentage =
-            totalTeamCount > 0
-              ? (teamWithDriverCount / totalTeamCount) * 100
-              : 0;
+        const chosenPercentage =
+          totalTeamCount > 0 ? (teamWithDriverCount / totalTeamCount) * 100 : 0;
 
-          await prisma.driver.update({
-            where: { driverId: driver.driverId },
-            data: { chosenPercentage },
-          });
-        })
-      );
+        await prisma.driver.update({
+          where: { driverId: driver.driverId },
+          data: { chosenPercentage },
+        });
+      })
+    );
 
-      // Update constructor chosen percentage
-      const allConstructors = await prisma.constructor.findMany();
-      await Promise.all(
-        allConstructors.map(async (constructor) => {
-          const teamWithConstructorCount = await prisma.team.count({
-            where: {
-              constructorIds: {
-                has: constructor.constructorId,
-              },
+    // Update constructor chosen percentage
+    const allConstructors = await prisma.constructor.findMany();
+    await Promise.all(
+      allConstructors.map(async (constructor) => {
+        const teamWithConstructorCount = await prisma.team.count({
+          where: {
+            constructorIds: {
+              has: constructor.constructorId,
             },
-          });
+          },
+        });
 
-          const chosenPercentage =
-            totalTeamCount > 0
-              ? (teamWithConstructorCount / totalTeamCount) * 100
-              : 0;
+        const chosenPercentage =
+          totalTeamCount > 0
+            ? (teamWithConstructorCount / totalTeamCount) * 100
+            : 0;
 
-          await prisma.constructor.update({
-            where: { constructorId: constructor.constructorId },
-            data: { chosenPercentage },
-          });
-        })
-      );
+        await prisma.constructor.update({
+          where: { constructorId: constructor.constructorId },
+          data: { chosenPercentage },
+        });
+      })
+    );
 
-      res.status(200).send({ data: "Team deleted." });
-      return;
-    } else {
-      res.status(400).send({ data: "User ID does not match team user." });
-      return;
-    }
+    res.status(200).send({ data: "Team deleted." });
+    return;
   } catch (err) {
     console.log(err);
     res.status(500).send({ data: "Something went wrong." });
