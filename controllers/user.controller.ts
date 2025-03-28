@@ -284,11 +284,11 @@ export const deleteUser = async (
   res: Response
 ): Promise<void> => {
   try {
-    const username = req?.body?.username;
+    const userId = req?.body?.userId;
 
     // Find the user along with teams and leagues
     const user = await prisma.user.findUnique({
-      where: { username },
+      where: { id: userId },
       include: { teams: true }, // Get user's teams
     });
 

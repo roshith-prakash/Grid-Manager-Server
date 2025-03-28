@@ -40,10 +40,10 @@ router.get("/", (_, res) => {
 // DRIVERS & CONSTRUCTORS
 
 // Get the Drivers
-router.get("/get-drivers", getDrivers);
+router.post("/get-drivers", getDrivers);
 
 // Get the Constructors
-router.get("/get-constructors", getConstructors);
+router.post("/get-constructors", getConstructors);
 
 // Get the Drivers
 router.post("/get-drivers-stats", getDriverStats);
@@ -112,19 +112,19 @@ router.post("/get-user-public-leagues", getUserPublicLeagues);
 // Leaderboard Routes
 
 // Get the most select drivers
-router.get("/get-most-selected-drivers", getMostSelectedDrivers);
+router.post("/get-most-selected-drivers", getMostSelectedDrivers);
 
 // Get the most select constructors
-router.get("/get-most-selected-constructors", getMostSelectedConstructors);
+router.post("/get-most-selected-constructors", getMostSelectedConstructors);
 
 // Get the highest scoring drivers
-router.get("/get-highest-scoring-drivers", getHighestScoringDrivers);
+router.post("/get-highest-scoring-drivers", getHighestScoringDrivers);
 
 // Get the highest scoring constructors
-router.get("/get-highest-scoring-constructors", getHighestScoringConstructors);
+router.post("/get-highest-scoring-constructors", getHighestScoringConstructors);
 
 // Get top 3 teams
-router.get("/get-top-3-teams", getTop3Teams);
+router.post("/get-top-3-teams", getTop3Teams);
 
 // ------------------------------------------------------------------
 

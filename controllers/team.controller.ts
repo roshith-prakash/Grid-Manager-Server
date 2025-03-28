@@ -170,7 +170,7 @@ export const createTeam = async (
   res: Response
 ): Promise<void> => {
   try {
-    const user = req.body?.user;
+    const userId = req.body?.userId;
     const teamDrivers = req?.body?.teamDrivers;
     const teamConstructors = req?.body?.teamConstructors;
     const teamName = req?.body?.teamName;
@@ -180,7 +180,7 @@ export const createTeam = async (
     // Find User
     const userinDB = await prisma.user.findUnique({
       where: {
-        firebaseUID: user?.firebaseUID,
+        id: userId,
       },
     });
 
@@ -452,7 +452,8 @@ export const getTeamsInaLeague = async (
 // Edit an existing Team
 export const editTeam = async (req: Request, res: Response): Promise<void> => {
   try {
-    const teamId = req.body?.teamId;
+    const teamId = req?.body?.teamId;
+    const userId = req?.body?.userId;
     const teamDrivers = req?.body?.teamDrivers;
     const teamConstructors = req?.body?.teamConstructors;
     const teamName = req?.body?.teamName;
@@ -461,6 +462,7 @@ export const editTeam = async (req: Request, res: Response): Promise<void> => {
     const team = await prisma.team.findUnique({
       where: {
         id: teamId,
+        userId: userId,
       },
     });
 
@@ -627,6 +629,7 @@ export const deleteTeam = async (
     const team = await prisma.team.findUnique({
       where: {
         id: teamId,
+        userId: userId,
       },
       select: {
         id: true,
@@ -745,7 +748,7 @@ export const createLeague = async (
   res: Response
 ): Promise<void> => {
   try {
-    const user = req?.body?.user;
+    const userId = req?.body?.userId;
     const leagueName = req?.body?.leagueName;
     const isPrivate = req?.body?.isPrivate;
 
@@ -755,7 +758,7 @@ export const createLeague = async (
     const newLeague = await prisma.league.create({
       data: {
         name: leagueName,
-        userId: user?.id,
+        userId: userId,
         leagueId: leagueId,
         private: isPrivate,
       },
@@ -951,11 +954,13 @@ export const updateLeague = async (
     const leagueName = req?.body?.leagueName;
     const isPrivate = req?.body?.isPrivate;
     const leagueId = req?.body?.leagueId;
+    const userId = req?.body?.userId;
 
     // Find the league to be updated
     const league = await prisma.league.findUnique({
       where: {
         leagueId: leagueId,
+        userId: userId,
       },
     });
 
@@ -992,11 +997,13 @@ export const deleteLeague = async (
 ): Promise<void> => {
   try {
     const leagueId = req?.body?.leagueId;
+    const userId = req?.body?.userId;
 
     // Find the league to be updated
     const league = await prisma.league.findUnique({
       where: {
         leagueId: leagueId,
+        userId: userId,
       },
     });
 

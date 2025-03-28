@@ -5,6 +5,7 @@ import helmet from "helmet";
 import cors, { CorsOptions } from "cors";
 import express, { NextFunction, Response } from "express";
 import { redisClient } from "./utils/redis.ts";
+import rateLimit from "express-rate-limit";
 
 dotenv.config();
 
@@ -19,6 +20,8 @@ import {
   updateSprintScores,
 } from "./functions/updateScore.ts";
 import { updatePrices } from "./functions/updatePrice.ts";
+
+import { checkIfUserIsAuthenticated } from "./middleware/authMiddleware.ts";
 
 // Initializing Server -------------------------------------------------------------------------------------------
 
@@ -47,14 +50,23 @@ const corsOptions: CorsOptions = {
   },
 };
 
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20, // Limit each IP to 20 requests per minute
+});
+
+// Rate Limit
+app.use(limiter);
 // Parses request body.
 app.use(express.urlencoded({ extended: true }));
 // Parses JSON passed inside body.
 app.use(express.json());
 // Enable CORS
 app.use(cors(corsOptions));
-// Add security to server.
+// Adds security to the server.
 app.use(helmet());
+// Removes the "X-Powered-By" HTTP header from Express responses.
+app.disable("x-powered-by");
 
 // Routes -------------------------------------------------------------------------------------------
 
@@ -158,7 +170,7 @@ app.get(
 // Auth Routes
 app.use("/api/v1/user", userRouter);
 // Team + League routes
-app.use("/api/v1/team", teamRouter);
+app.use("/api/v1/team", checkIfUserIsAuthenticated, teamRouter);
 
 // Listening on PORT -------------------------------------------------------------------------------------------
 
