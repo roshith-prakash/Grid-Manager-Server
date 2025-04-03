@@ -25,6 +25,7 @@ import {
   getTop3Teams,
   getDriverStats,
   getConstructorStats,
+  checkIfUserCanJoinLeague,
 } from "../controllers/team.controller.ts";
 
 // Create a router.
@@ -107,20 +108,23 @@ router.post("/get-user-leagues", getCurrentUserLeagues);
 // Get Public Leagues in which a User's teams are present (non current user)
 router.post("/get-user-public-leagues", getUserPublicLeagues);
 
+// Check if user has not exceeded maximum number of leagues
+router.post("/check-if-user-can-join-league", checkIfUserCanJoinLeague);
+
 // ------------------------------------------------------------------
 
 // Leaderboard Routes
 
-// Get the most select drivers
+// Get the 3 most selected drivers
 router.post("/get-most-selected-drivers", getMostSelectedDrivers);
 
-// Get the most select constructors
+// Get the 3 most selected constructors
 router.post("/get-most-selected-constructors", getMostSelectedConstructors);
 
-// Get the highest scoring drivers
+// Get the 3 highest scoring drivers
 router.post("/get-highest-scoring-drivers", getHighestScoringDrivers);
 
-// Get the highest scoring constructors
+// Get the 3 highest scoring constructors
 router.post("/get-highest-scoring-constructors", getHighestScoringConstructors);
 
 // Get top 3 teams

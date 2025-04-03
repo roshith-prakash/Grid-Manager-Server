@@ -52,21 +52,21 @@ const corsOptions: CorsOptions = {
 
 const limiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 20, // Limit each IP to 20 requests per minute
+  max: 50, // Limit each IP to 20 requests per minute
 });
 
 // Rate Limit
 app.use(limiter);
 // Parses request body.
 app.use(express.urlencoded({ extended: true }));
-// Parses JSON passed inside body.
-app.use(express.json());
-// Enable CORS
-app.use(cors(corsOptions));
 // Adds security to the server.
 app.use(helmet());
 // Removes the "X-Powered-By" HTTP header from Express responses.
 app.disable("x-powered-by");
+// Parses JSON passed inside body.
+app.use(express.json());
+// Enable CORS
+app.use(cors(corsOptions));
 
 // Routes -------------------------------------------------------------------------------------------
 
@@ -111,7 +111,7 @@ app.get(
   }
 );
 
-// Updating scores (cached via redis so that Jolpica API rate limits arent hit)
+// Updating scores (cached via redis so that Jolpica API rate limits aren't hit)
 app.get(
   "/api/v1/update-scores",
   // MiddleWare to check if update score was already called

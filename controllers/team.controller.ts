@@ -2,6 +2,10 @@ import { prisma } from "../utils/primsaClient.ts";
 import { Request, Response } from "express";
 import { generateLeagueUID } from "../utils/generateLeagueUID.ts";
 import { Constructor, Driver } from "@prisma/client";
+import {
+  numberOfPossibleLeagues,
+  numberOfPossibleTeamsInALeague,
+} from "../constants/DatabaseConstants.ts";
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -182,6 +186,7 @@ export const createTeam = async (
       where: {
         id: userId,
       },
+      select: { id: true },
     });
 
     // User is not present
@@ -190,16 +195,51 @@ export const createTeam = async (
       return;
     }
 
+    // Check number of leagues the user has joined
+    const leagueCount = await prisma.league.count({
+      where: {
+        OR: [
+          {
+            userId: userinDB?.id,
+          },
+          {
+            teams: { some: { userId: userinDB?.id } },
+          },
+        ],
+      },
+    });
+
+    // A user can join a maximum of "numberOfPossibleLeagues" teams. Includes user created leagues.
+    if (leagueCount >= numberOfPossibleLeagues) {
+      res.status(403).send({ data: "Maximum number of leagues reached." });
+      return;
+    }
+
     // Find league
     const league = await prisma.league.findUnique({
       where: {
         leagueId: leagueId,
       },
+      select: { id: true },
     });
 
     // League is not present
     if (!league) {
       res.status(404).send({ data: "League does not exist." });
+      return;
+    }
+
+    // Check how many teams the user has added in a league.
+    const teamCount = await prisma.team.count({
+      where: {
+        userId: userinDB?.id,
+        leagueId: league?.id,
+      },
+    });
+
+    // User can add at max "numberOfPossibleTeamsInALeague" teams in a league.
+    if (teamCount >= numberOfPossibleTeamsInALeague) {
+      res.status(403).send({ data: "You can only create 2 teams per league." });
       return;
     }
 
@@ -209,6 +249,7 @@ export const createTeam = async (
       (item: any) => item?.constructorId
     );
 
+    // Create a Team
     const createdTeam = await prisma.team.create({
       data: {
         name: teamName,
@@ -220,6 +261,7 @@ export const createTeam = async (
       },
     });
 
+    // Create Team drivers
     teamDrivers?.map(async (driver: Driver) => {
       await prisma.driverInTeam.create({
         data: {
@@ -240,6 +282,7 @@ export const createTeam = async (
       });
     });
 
+    // Create Team constructors
     teamConstructors?.map(async (constructor: Constructor) => {
       await prisma.constructorInTeam.create({
         data: {
@@ -256,8 +299,10 @@ export const createTeam = async (
       });
     });
 
+    // Check number of teams in a league.
     const totalTeamCount = await prisma.team.count();
 
+    // Update team count in league.
     await prisma.league.update({
       where: { id: league?.id },
       data: { numberOfTeams: { increment: 1 } },
@@ -309,6 +354,7 @@ export const createTeam = async (
       })
     );
 
+    // Get team
     const team = await prisma.team.findUnique({
       where: { id: createdTeam?.id },
       include: {
@@ -744,6 +790,39 @@ export const createLeague = async (
     const leagueName = req?.body?.leagueName;
     const isPrivate = req?.body?.isPrivate;
 
+    // Find User
+    const userinDB = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: { id: true },
+    });
+
+    // User is not present
+    if (!userinDB) {
+      res.status(404).send({ data: "User does not exist." });
+      return;
+    }
+
+    const leagueCount = await prisma.league.count({
+      where: {
+        OR: [
+          {
+            userId: userinDB?.id,
+          },
+          {
+            teams: { some: { userId: userinDB?.id } },
+          },
+        ],
+      },
+    });
+
+    // A user can join a maximum of "numberOfPossibleLeagues" teams. Includes user created leagues.
+    if (leagueCount >= numberOfPossibleLeagues) {
+      res.status(403).send({ data: "Maximum number of leagues reached." });
+      return;
+    }
+
     // Generate an ID for the league
     const leagueId = generateLeagueUID();
 
@@ -1092,6 +1171,57 @@ export const deleteLeague = async (
   } catch (err) {
     console.log(err);
     res.status(500).send({ data: "Something went wrong." });
+    return;
+  }
+};
+
+// Check if user has not exceeded league limits
+export const checkIfUserCanJoinLeague = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.body?.userId;
+
+    // Find User
+    const userinDB = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: { id: true },
+    });
+
+    // User is not present
+    if (!userinDB) {
+      res.status(404).send({ data: "User does not exist." });
+      return;
+    }
+
+    // Check number of leagues the user has joined
+    const leagueCount = await prisma.league.count({
+      where: {
+        OR: [
+          {
+            userId: userinDB?.id,
+          },
+          {
+            teams: { some: { userId: userinDB?.id } },
+          },
+        ],
+      },
+    });
+
+    // A user can join a maximum of "numberOfPossibleLeagues" teams. Includes user created leagues.
+    if (leagueCount >= numberOfPossibleLeagues) {
+      res.status(200).send({ canUserJoinLeague: false });
+      return;
+    }
+
+    res.status(200).send({ canUserJoinLeague: true });
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ data: "Something went wrong!" });
     return;
   }
 };
@@ -1465,7 +1595,6 @@ export const getCurrentUserTeamsInLeague = async (
   try {
     const userId = req?.body?.userId;
     const leagueId = req?.body?.leagueId;
-    const page = req?.body?.page;
 
     // Find user by id
     const user = await prisma.user.findUnique({
@@ -1521,26 +1650,9 @@ export const getCurrentUserTeamsInLeague = async (
         },
       },
       orderBy: [{ score: "desc" }, { updatedAt: "desc" }],
-      skip: page * 4,
-      take: 4,
     });
 
-    // Check if more teams are present where the user is the creator.
-    const nextPageExists = await prisma.team.count({
-      where: {
-        userId: user.id,
-        League: {
-          private: false,
-        },
-      },
-      orderBy: [{ score: "desc" }, { updatedAt: "desc" }],
-      skip: (page + 1) * 4,
-      take: 4,
-    });
-
-    res
-      .status(200)
-      .send({ teams: teams, nextPage: nextPageExists != 0 ? page + 1 : null });
+    res.status(200).send({ teams: teams });
     return;
   } catch (err) {
     console.log(err);

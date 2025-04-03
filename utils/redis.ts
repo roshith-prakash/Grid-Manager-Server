@@ -12,5 +12,9 @@ export const redisClient = createClient({
   },
 });
 
-//  Connect client to db
-await redisClient.connect();
+try {
+  //  Connect client to db
+  await redisClient.connect();
+} catch (err) {
+  console.log(err);
+}
