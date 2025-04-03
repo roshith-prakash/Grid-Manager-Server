@@ -899,6 +899,10 @@ export const searchPublicLeagues = async (
         OR: [
           {
             userId: userId,
+            OR: [
+              { leagueId: { contains: searchTerm, mode: "insensitive" } },
+              { name: { contains: searchTerm, mode: "insensitive" } },
+            ],
           },
           {
             private: false,
