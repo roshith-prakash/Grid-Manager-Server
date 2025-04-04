@@ -311,6 +311,7 @@ export const deleteUser = async (
     const userCreatedLeagueIds = leagues
       .filter((l) => l.userId === user.id)
       .map((l) => l.id);
+
     const userJoinedLeagueIds = leagues
       .filter((l) => l.userId !== user.id)
       .map((l) => l.id);
@@ -344,6 +345,7 @@ export const deleteUser = async (
     res
       .status(200)
       .send({ data: "User and related data deleted successfully." });
+    return;
   } catch (err) {
     console.error("Error deleting user:", err);
     res.status(500).send({ data: "Something went wrong." });

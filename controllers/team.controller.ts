@@ -897,6 +897,7 @@ export const searchPublicLeagues = async (
     const leagues = await prisma.league.findMany({
       where: {
         OR: [
+          // Leagues created by the user
           {
             userId: userId,
             OR: [
@@ -904,6 +905,7 @@ export const searchPublicLeagues = async (
               { name: { contains: searchTerm, mode: "insensitive" } },
             ],
           },
+          // Public leagues
           {
             private: false,
             OR: [
@@ -911,6 +913,7 @@ export const searchPublicLeagues = async (
               { name: { contains: searchTerm, mode: "insensitive" } },
             ],
           },
+          // Private leagues in which user is present
           {
             private: true,
             teams: { some: { userId: userId } },
@@ -918,6 +921,11 @@ export const searchPublicLeagues = async (
               { leagueId: { contains: searchTerm, mode: "insensitive" } },
               { name: { contains: searchTerm, mode: "insensitive" } },
             ],
+          },
+          // Private league whose league ID is specified correctly.
+          {
+            private: true,
+            leagueId: { equals: searchTerm, mode: "insensitive" },
           },
         ],
       },
@@ -942,9 +950,15 @@ export const searchPublicLeagues = async (
     const nextPageExists = await prisma.league.count({
       where: {
         OR: [
+          // Leagues created by the user
           {
             userId: userId,
+            OR: [
+              { leagueId: { contains: searchTerm, mode: "insensitive" } },
+              { name: { contains: searchTerm, mode: "insensitive" } },
+            ],
           },
+          // Public leagues
           {
             private: false,
             OR: [
@@ -952,6 +966,7 @@ export const searchPublicLeagues = async (
               { name: { contains: searchTerm, mode: "insensitive" } },
             ],
           },
+          // Private leagues in which user is present
           {
             private: true,
             teams: { some: { userId: userId } },
@@ -959,6 +974,11 @@ export const searchPublicLeagues = async (
               { leagueId: { contains: searchTerm, mode: "insensitive" } },
               { name: { contains: searchTerm, mode: "insensitive" } },
             ],
+          },
+          // Private league whose league ID is specified correctly.
+          {
+            private: true,
+            leagueId: { equals: searchTerm, mode: "insensitive" },
           },
         ],
       },
@@ -1600,43 +1620,33 @@ export const getCurrentUserTeamsInLeague = async (
     const userId = req?.body?.userId;
     const leagueId = req?.body?.leagueId;
 
-    // Find user by id
+    // Check if user exists
     const user = await prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
-      select: {
-        id: true, // Get user ID
-      },
+      where: { id: userId },
+      select: { id: true },
     });
 
-    // If user does not exist - send an error.
     if (!user) {
       res.status(404).send({ data: "User not found." });
       return;
     }
 
-    // Find League by leagueId
+    // Check if league exists
     const league = await prisma.league.findUnique({
-      where: {
-        leagueId: leagueId,
-      },
-      select: {
-        id: true,
-      },
+      where: { leagueId },
+      select: { id: true },
     });
 
-    // If league does not exist - send an error.
     if (!league) {
       res.status(404).send({ data: "League not found." });
       return;
     }
 
-    // Get teams where the user is the creator
-    const teams = await prisma.team.findMany({
+    // Get current user's teams in the league
+    const userTeams = await prisma.team.findMany({
       where: {
         userId: user.id,
-        leagueId: league?.id,
+        leagueId: league.id,
       },
       select: {
         id: true,
@@ -1653,13 +1663,34 @@ export const getCurrentUserTeamsInLeague = async (
           },
         },
       },
-      orderBy: [{ score: "desc" }, { updatedAt: "desc" }],
     });
 
-    res.status(200).send({ teams: teams });
-    return;
+    // For each team, calculate position in league
+    const teamsWithPosition = await Promise.all(
+      userTeams.map(async (team) => {
+        const higherRankCount = await prisma.team.count({
+          where: {
+            leagueId: league.id,
+            OR: [
+              { score: { gt: team.score } },
+              {
+                score: team.score,
+                updatedAt: { lt: team.updatedAt },
+              },
+            ],
+          },
+        });
+
+        return {
+          ...team,
+          position: higherRankCount + 1,
+        };
+      })
+    );
+
+    res.status(200).send({ teams: teamsWithPosition });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.status(500).send({ data: "Something went wrong" });
   }
 };
