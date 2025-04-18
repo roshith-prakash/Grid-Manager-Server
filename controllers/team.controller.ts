@@ -3,9 +3,12 @@ import { Request, Response } from "express";
 import { generateLeagueUID } from "../utils/generateLeagueUID.ts";
 import { Constructor, Driver } from "@prisma/client";
 import {
+  changeCost,
+  freeChangeLimit,
   numberOfPossibleLeagues,
   numberOfPossibleTeamsInALeague,
 } from "../constants/DatabaseConstants.ts";
+import { countNumberOfChanges } from "../utils/countNumberOfChanges.ts";
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -400,6 +403,7 @@ export const getTeamById = async (
         teamDrivers: { orderBy: { pointsForTeam: "desc" } },
         price: true,
         score: true,
+        freeChangeLimit: true,
         League: {
           select: {
             name: true,
@@ -540,17 +544,51 @@ export const editTeam = async (req: Request, res: Response): Promise<void> => {
       (constructor: string) => !selectedConstructors.includes(constructor)
     );
 
-    const editedTeam = await prisma.team.update({
-      where: {
-        id: teamId,
-      },
-      data: {
-        name: teamName,
-        driverIds: selectedDrivers,
-        constructorIds: selectedConstructors,
-        price: price,
-      },
-    });
+    let numberOfChanges = 0;
+    numberOfChanges += countNumberOfChanges(team?.driverIds, selectedDrivers);
+    numberOfChanges += countNumberOfChanges(
+      team?.constructorIds,
+      selectedConstructors
+    );
+
+    let editedTeam;
+
+    if (team?.freeChangeLimit < 0) {
+      // Unlimited changes
+      editedTeam = await prisma.team.update({
+        where: { id: teamId },
+        data: {
+          name: teamName,
+          driverIds: selectedDrivers,
+          constructorIds: selectedConstructors,
+          price: price,
+        },
+      });
+    } else {
+      const changesExceedFreeLimit = numberOfChanges > team.freeChangeLimit;
+
+      const remainingChanges = Math.max(
+        team.freeChangeLimit - numberOfChanges,
+        0
+      );
+
+      editedTeam = await prisma.team.update({
+        where: { id: teamId },
+        data: {
+          name: teamName,
+          driverIds: selectedDrivers,
+          constructorIds: selectedConstructors,
+          price: price,
+          freeChangeLimit: changesExceedFreeLimit ? 0 : remainingChanges,
+          score: changesExceedFreeLimit
+            ? {
+                decrement:
+                  (numberOfChanges - team.freeChangeLimit) * changeCost,
+              }
+            : team.score,
+        },
+      });
+    }
 
     newDrivers?.map(async (driver: Driver) => {
       await prisma.driverInTeam.create({
@@ -654,7 +692,7 @@ export const editTeam = async (req: Request, res: Response): Promise<void> => {
       })
     );
 
-    res.status(200).send({ data: editedTeam });
+    res.status(200).send({ data: "Team has been edited" });
     return;
   } catch (err) {
     console.log(err);

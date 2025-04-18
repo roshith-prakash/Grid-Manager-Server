@@ -15,6 +15,7 @@ import userRouter from "./routes/user.routes.ts";
 import teamRouter from "./routes/team.routes.ts";
 
 import {
+  updateFreeLimit,
   updateQualiScores,
   updateRaceScores,
   updateSprintScores,
@@ -129,9 +130,14 @@ app.get(
   // Function to update score
   async (_, res: Response) => {
     try {
+      // Update Sprint Scores
       await updateSprintScores();
+      // Update Quali Scores
       await updateQualiScores();
+      // Update Grand Prix Scores
       await updateRaceScores();
+      // Update the free changes limit
+      await updateFreeLimit();
 
       // Caching for 3 hours
       await redisClient.setEx(

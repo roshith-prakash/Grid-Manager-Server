@@ -173,9 +173,12 @@ model Team {
   price            Int                 @default(0)
   // Score
   score            Int                 @default(0)
+  // Free changes
+  freeChangeLimit  Int                 @default(0)
   // Created & updated times
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
+  // League in which team is present.
   League           League?             @relation(fields: [leagueId], references: [id])
   leagueId         String?             @db.ObjectId
 }
@@ -191,7 +194,7 @@ model League {
   leagueId      String   @unique
   private       Boolean  @default(false)
   name          String?
-  numberOfTeams Int      @default(0)
+  numberOfTeams Int      @default(-1)
   teams         Team[]
   // Created & updated times
   createdAt     DateTime @default(now())

@@ -5,6 +5,7 @@ import {
   QualiResultItem,
   RaceResultItem,
 } from "../types/types.ts";
+import { freeChangeLimit } from "../constants/DatabaseConstants.ts";
 
 // To auto update Race Scores
 export const updateRaceScores = async () => {
@@ -535,6 +536,22 @@ export const updateSprintScores = async () => {
         );
       }
     }
+  } catch (err) {
+    console.log(err);
+    return;
+  }
+};
+
+// To auto update the free changes limit.
+export const updateFreeLimit = async () => {
+  try {
+    await prisma.team.updateMany({
+      data: {
+        freeChangeLimit: freeChangeLimit,
+      },
+    });
+
+    console.log("Free Change Limit updated for teams.");
   } catch (err) {
     console.log(err);
     return;
