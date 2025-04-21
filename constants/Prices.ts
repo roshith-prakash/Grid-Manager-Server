@@ -1,5 +1,5 @@
 export const driverPrices = [
-  25, 23, 21, 20, 20, 18, 16, 14, 14, 12, 10, 9, 9, 8, 7, 6, 6, 5, 4, 4,
+  25, 24, 24, 22, 17, 17, 14, 13, 9, 8, 8, 8, 7, 7, 7, 6, 6, 6, 4, 3,
 ];
 
-export const constructorPrices = [30, 28, 26, 25, 20, 18, 14, 12, 11, 10];
+export const constructorPrices = [37, 29, 24, 23, 15, 14, 11, 11, 8, 7];

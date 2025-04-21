@@ -7,10 +7,13 @@ import express, { NextFunction, Response } from "express";
 import { redisClient } from "./utils/redis.ts";
 import rateLimit from "express-rate-limit";
 
+// Configure Dotenv to read environment variables
+
 dotenv.config();
 
-// Importing Routes ----------------------------------------------------------------------------------------------
+// Importing Routes & Middleware --------------------------------------------------------------------------------
 
+import { checkIfUserIsAuthenticated } from "./middleware/authMiddleware.ts";
 import userRouter from "./routes/user.routes.ts";
 import teamRouter from "./routes/team.routes.ts";
 
@@ -22,14 +25,12 @@ import {
 } from "./functions/updateScore.ts";
 import { updatePrices } from "./functions/updatePrice.ts";
 
-import { checkIfUserIsAuthenticated } from "./middleware/authMiddleware.ts";
-
 // Initializing Server -------------------------------------------------------------------------------------------
 
 const app = express();
 let server = http.createServer(app);
 
-// Using Middleware -------------------------------------------------------------------------------------------
+// Using Middleware ----------------------------------------------------------------------------------------------
 
 // Whitelist for domains
 const whitelist = ["http://localhost:3000", "https://grid-manager.vercel.app"];
@@ -51,9 +52,10 @@ const corsOptions: CorsOptions = {
   },
 };
 
+// Limit each IP to 30 requests per minute
 const limiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 50, // Limit each IP to 20 requests per minute
+  max: 30,
 });
 
 // Rate Limit
@@ -69,7 +71,7 @@ app.use(express.json());
 // Enable CORS
 app.use(cors(corsOptions));
 
-// Routes -------------------------------------------------------------------------------------------
+// Routes ------------------------------------------------------------------------------------------------------------
 
 // Default route to check if server is working.
 app.get("/", (_, res: Response) => {
@@ -171,7 +173,7 @@ app.get(
   }
 );
 
-// Routes -----------------------------------------------------------------------------------------
+// Routes -----------------------------------------------------------------------------------------------------
 
 // Auth Routes
 app.use("/api/v1/user", userRouter);
