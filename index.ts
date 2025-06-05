@@ -6,6 +6,7 @@ import cors, { CorsOptions } from "cors";
 import express, { NextFunction, Response } from "express";
 import { redisClient } from "./utils/redis.ts";
 import rateLimit from "express-rate-limit";
+import { getNotices } from "./functions/notices.ts";
 
 // Configure Dotenv to read environment variables
 
@@ -172,6 +173,9 @@ app.get(
     }
   }
 );
+
+// Show notices
+app.post("/api/v1/get-notices", getNotices);
 
 // Routes -----------------------------------------------------------------------------------------------------
 

@@ -42,6 +42,8 @@ model Driver {
   constructor_color String
   // Percentage of teams in which the driver is present
   chosenPercentage  Float    @default(0)
+  // Disabled 
+  isDriverDisabled  Boolean  @default(false)
   // Created & updated times
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -83,27 +85,29 @@ model DriverInTeam {
 
 // Constructors 
 model Constructor {
-  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
   // Constructor number (required for DND)
-  constructorNumber Int
+  constructorNumber     Int
   // Constructor Id
-  constructorId     String   @unique
+  constructorId         String   @unique
   // Constructor name
-  name              String
+  name                  String
   // Price
-  price             Int      @default(0)
+  price                 Int      @default(0)
   // Points scored in the season
-  points            Int      @default(0)
+  points                Int      @default(0)
   // Points History
-  pointsHistory     Json[]
+  pointsHistory         Json[]
   // Images
-  logo              String?
-  carImage          String?
+  logo                  String?
+  carImage              String?
   // Percentage of teams in which the constructor is present
-  chosenPercentage  Float    @default(0)
+  chosenPercentage      Float    @default(0)
+  // Disabled 
+  isConstructorDisabled Boolean  @default(false)
   // Created & updated times
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }
 
 model ConstructorInTeam {
@@ -229,6 +233,15 @@ model LastSprint {
   season    Int
   round     Int
   raceName  String
+  // Created & updated times
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Notice {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  content   String
   // Created & updated times
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

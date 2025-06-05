@@ -33,6 +33,7 @@ export const getDrivers = async (
         image: true,
         familyName: true,
         givenName: true,
+        isDriverDisabled: true,
       },
       orderBy: {
         points: "desc",
@@ -1830,3 +1831,5 @@ export const getTop3Teams = async (req: Request, res: Response) => {
     res.status(500).send({ data: "Something went wrong" });
   }
 };
+
+// ------------------------------------------------------------------------------------------------------------------------
