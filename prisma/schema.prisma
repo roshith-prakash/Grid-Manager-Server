@@ -174,7 +174,7 @@ model Team {
   // Score
   score            Int                 @default(0)
   // Free changes
-  freeChangeLimit  Int                 @default(0)
+  freeChangeLimit  Int                 @default(-1)
   // Created & updated times
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
@@ -194,7 +194,7 @@ model League {
   leagueId      String   @unique
   private       Boolean  @default(false)
   name          String?
-  numberOfTeams Int      @default(-1)
+  numberOfTeams Int      @default(0)
   teams         Team[]
   // Created & updated times
   createdAt     DateTime @default(now())

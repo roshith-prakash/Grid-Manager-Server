@@ -34,6 +34,9 @@ export const getDrivers = async (
         familyName: true,
         givenName: true,
       },
+      orderBy: {
+        points: "desc",
+      },
     });
 
     res.status(200).send({ drivers: drivers });
@@ -51,7 +54,12 @@ export const getConstructors = async (
   res: Response
 ): Promise<void> => {
   try {
-    let constructors = await prisma.constructor.findMany();
+    // Do not add "where" - constructor keyword causes errors
+    let constructors = await prisma.constructor.findMany({
+      orderBy: {
+        points: "desc",
+      },
+    });
 
     res.status(200).send({ constructors: constructors });
     return;

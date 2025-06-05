@@ -12,7 +12,7 @@ export const updateRaceScores = async () => {
   try {
     // Get data for last race
     let apiData = await axios.get(
-      "https://api.jolpi.ca/ergast/f1/current/next/results/"
+      "https://api.jolpi.ca/ergast/f1/current/last/results/"
     );
 
     // Check if data is present.
@@ -199,11 +199,6 @@ export const updateQualiScores = async () => {
       "https://api.jolpi.ca/ergast/f1/current/next/qualifying"
     );
 
-    console.log(
-      apiData?.data?.MRData?.RaceTable?.season,
-      apiData?.data?.MRData?.RaceTable?.round
-    );
-
     if (apiData?.data?.MRData?.RaceTable?.Races?.length > 0) {
       const lastQualifying = await prisma.lastQualifying.findFirst();
 
@@ -372,7 +367,7 @@ export const updateQualiScores = async () => {
 export const updateSprintScores = async () => {
   try {
     let apiData = await axios.get(
-      "https://api.jolpi.ca/ergast/f1/current/next/sprint/"
+      "https://api.jolpi.ca/ergast/f1/current/last/sprint/"
     );
 
     if (apiData?.data?.MRData?.RaceTable?.Races?.length > 0) {
