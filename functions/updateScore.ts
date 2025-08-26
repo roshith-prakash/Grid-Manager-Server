@@ -15,6 +15,8 @@ export const updateRaceScores = async () => {
       "https://api.jolpi.ca/ergast/f1/current/last/results/"
     );
 
+    console.log(apiData?.data);
+
     // Check if data is present.
     if (apiData?.data?.MRData?.RaceTable?.Races?.length > 0) {
       //   Get last race for which scores were added.
@@ -367,7 +369,7 @@ export const updateQualiScores = async () => {
 export const updateSprintScores = async () => {
   try {
     let apiData = await axios.get(
-      "https://api.jolpi.ca/ergast/f1/current/last/sprint/"
+      "https://api.jolpi.ca/ergast/f1/current/next/sprint/"
     );
 
     if (apiData?.data?.MRData?.RaceTable?.Races?.length > 0) {

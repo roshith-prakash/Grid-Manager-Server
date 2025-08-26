@@ -4,7 +4,6 @@ import { generateLeagueUID } from "../utils/generateLeagueUID.ts";
 import { Constructor, Driver } from "@prisma/client";
 import {
   changeCost,
-  freeChangeLimit,
   numberOfPossibleLeagues,
   numberOfPossibleTeamsInALeague,
 } from "../constants/DatabaseConstants.ts";
@@ -210,13 +209,10 @@ export const createTeam = async (
     // Check number of leagues the user has joined
     const leagueCount = await prisma.league.count({
       where: {
+        leagueId: { not: leagueId }, // exclude the league they're trying to join
         OR: [
-          {
-            userId: userinDB?.id,
-          },
-          {
-            teams: { some: { userId: userinDB?.id } },
-          },
+          { userId: userinDB?.id },
+          { teams: { some: { userId: userinDB?.id } } },
         ],
       },
     });
@@ -976,6 +972,7 @@ export const searchPublicLeagues = async (
           },
         ],
       },
+      distinct: ["id"],
       select: {
         name: true,
         leagueId: true,
