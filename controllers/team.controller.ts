@@ -476,6 +476,7 @@ export const getTeamsInaLeague = async (
           select: { id: true, name: true, username: true, photoURL: true },
         },
       },
+      distinct: ["id"],
       orderBy: [{ score: "desc" }, { createdAt: "asc" }],
       skip: page * 4,
       take: 4,
@@ -900,6 +901,7 @@ export const getPublicLeagues = async (
       orderBy: {
         numberOfTeams: "desc",
       },
+      distinct: ["id"],
       skip: req?.body?.page * 4,
       take: 4,
     });
@@ -1328,6 +1330,7 @@ export const getCurrentUserTeams = async (
       where: {
         userId: user.id,
       },
+      distinct: ["id"],
       select: {
         id: true,
         name: true,
@@ -1403,6 +1406,7 @@ export const getCurrentUserLeagues = async (
           { teams: { some: { userId: user.id } } }, // User is part of a league via a team
         ],
       },
+      distinct: ["id"],
       select: {
         id: true,
         leagueId: true,
@@ -1494,6 +1498,7 @@ export const getUserPublicLeagues = async (
           },
         ],
       },
+      distinct: ["id"],
       select: {
         id: true,
         leagueId: true,
@@ -1596,6 +1601,7 @@ export const getUserPublicTeams = async (
           },
         ],
       },
+      distinct: ["id"],
       select: {
         id: true,
         name: true,
@@ -1692,6 +1698,7 @@ export const getCurrentUserTeamsInLeague = async (
         userId: user.id,
         leagueId: league.id,
       },
+      distinct: ["id"],
       select: {
         id: true,
         name: true,
