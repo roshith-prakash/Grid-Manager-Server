@@ -15,6 +15,7 @@ dotenv.config();
 // Importing Routes & Middleware --------------------------------------------------------------------------------
 
 import { checkIfUserIsAuthenticated } from "./middleware/authMiddleware.ts";
+import { verifyAdminSecret } from "./middleware/adminMiddleware.ts";
 import userRouter from "./routes/user.routes.ts";
 import teamRouter from "./routes/team.routes.ts";
 
@@ -42,8 +43,8 @@ const corsOptions: CorsOptions = {
     origin: string | undefined,
     callback: (err: Error | null, allow?: boolean) => void
   ) {
-    // Find request domain and check in whitelist.
-    if (origin && whitelist.indexOf(origin) !== -1) {
+    // Find request domain and check in whitelist. Allow undefined origin for server-to-server calls (e.g. Cron jobs).
+    if (!origin || whitelist.indexOf(origin) !== -1) {
       // Accept request
       callback(null, true);
     } else {
@@ -118,6 +119,7 @@ app.get(
 // Updating scores (cached via redis so that Jolpica API rate limits aren't hit)
 app.get(
   "/api/v1/update-scores",
+  verifyAdminSecret,
   // MiddleWare to check if update score was already called
   async (_, res: Response, next: NextFunction) => {
     const result = await redisClient.get(`update-scores`);
@@ -161,6 +163,7 @@ app.get(
 // Updating prices
 app.get(
   "/api/v1/update-prices",
+  verifyAdminSecret,
   // Function to update score
   async (_, res: Response) => {
     try {

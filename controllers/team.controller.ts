@@ -8,6 +8,7 @@ import {
   numberOfPossibleTeamsInALeague,
 } from "../constants/DatabaseConstants.ts";
 import { countNumberOfChanges } from "../utils/countNumberOfChanges.ts";
+import { isValidName } from "../utils/validateName.ts";
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -191,6 +192,12 @@ export const createTeam = async (
     const teamName = req?.body?.teamName;
     const leagueId = req?.body?.leagueId;
     const price = req?.body?.price;
+
+    const validationError = isValidName(teamName);
+    if (validationError) {
+      res.status(400).send({ data: validationError });
+      return;
+    }
 
     // Find User
     const userinDB = await prisma.user.findUnique({
@@ -515,6 +522,12 @@ export const editTeam = async (req: Request, res: Response): Promise<void> => {
     const teamName = req?.body?.teamName;
     const price = req?.body?.price;
 
+    const validationError = isValidName(teamName);
+    if (validationError) {
+      res.status(400).send({ data: validationError });
+      return;
+    }
+
     const team = await prisma.team.findUnique({
       where: {
         id: teamId,
@@ -834,6 +847,12 @@ export const createLeague = async (
     const leagueName = req?.body?.leagueName;
     const isPrivate = req?.body?.isPrivate;
 
+    const validationError = isValidName(leagueName);
+    if (validationError) {
+      res.status(400).send({ data: validationError });
+      return;
+    }
+
     // Find User
     const userinDB = await prisma.user.findUnique({
       where: {
@@ -1096,6 +1115,12 @@ export const updateLeague = async (
     const isPrivate = req?.body?.isPrivate;
     const leagueId = req?.body?.leagueId;
     const userId = req?.body?.userId;
+
+    const validationError = isValidName(leagueName);
+    if (validationError) {
+      res.status(400).send({ data: validationError });
+      return;
+    }
 
     // Find the league to be updated
     const league = await prisma.league.findUnique({
