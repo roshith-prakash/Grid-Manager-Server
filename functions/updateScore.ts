@@ -7,6 +7,8 @@ import {
 } from "../types/types.ts";
 import { freeChangeLimit } from "../constants/DatabaseConstants.ts";
 
+const driverIdMap: { [key: string]: string } = { "max_verstappen": "verstappen", "arvid_lindblad": "lindblad" };
+const constructorIdMap: { [key: string]: string } = { "red_bull": "redbullracing", "aston_martin": "astonmartin", "rb": "racingbulls", "haas": "haasf1team" };
 // To auto update Race Scores
 export const updateRaceScores = async () => {
   try {
@@ -66,8 +68,10 @@ export const updateRaceScores = async () => {
 
         // Loop through the result array
         result.map((driverResult: RaceResultItem, index: number) => {
-          const driverId = driverResult.Driver.driverId;
-          const constructorId = driverResult.Constructor.constructorId;
+          let driverId = driverResult.Driver.driverId;
+          driverId = driverIdMap[driverId] || driverId;
+          let constructorId = driverResult.Constructor.constructorId;
+          constructorId = constructorIdMap[constructorId] || constructorId;
           const points =
             (Number(driverResult.points) || 0) +
             Math.round((result?.length - index) / 1.25) +
@@ -107,7 +111,7 @@ export const updateRaceScores = async () => {
 
             // Update points for the Main driver table
             updateOperations.push(
-              prisma.driver.update({
+              prisma.driver.updateMany({
                 where: { driverId: driverId },
                 data: {
                   points: { increment: points },
@@ -163,7 +167,7 @@ export const updateRaceScores = async () => {
 
             // Update points for the Main constructor table
             updateOperations.push(
-              prisma.constructor.update({
+              prisma.constructor.updateMany({
                 where: { constructorId: constructorId },
                 data: {
                   points: { increment: points },
@@ -243,8 +247,10 @@ export const updateQualiScores = async () => {
 
         // Map through the result
         result.map((driverResult: QualiResultItem, index: number) => {
-          const driverId = driverResult.Driver.driverId;
-          const constructorId = driverResult.Constructor.constructorId;
+          let driverId = driverResult.Driver.driverId;
+          driverId = driverIdMap[driverId] || driverId;
+          let constructorId = driverResult.Constructor.constructorId;
+          constructorId = constructorIdMap[constructorId] || constructorId;
 
           const points = Math.round((result?.length - index) / 1.3); // Ensure points are numeric
 
@@ -278,7 +284,7 @@ export const updateQualiScores = async () => {
 
             // Update points for the Main driver table
             updateOperations.push(
-              prisma.driver.update({
+              prisma.driver.updateMany({
                 where: { driverId: driverId },
                 data: {
                   points: { increment: points },
@@ -334,7 +340,7 @@ export const updateQualiScores = async () => {
 
             // Update points for the Main constructor table
             updateOperations.push(
-              prisma.constructor.update({
+              prisma.constructor.updateMany({
                 where: { constructorId: constructorId },
                 data: {
                   points: { increment: points },
@@ -411,8 +417,10 @@ export const updateSprintScores = async () => {
         );
 
         result.map(async (driverResult: SprintResultItem, index: number) => {
-          const driverId = driverResult.Driver.driverId;
-          const constructorId = driverResult.Constructor.constructorId;
+          let driverId = driverResult.Driver.driverId;
+          driverId = driverIdMap[driverId] || driverId;
+          let constructorId = driverResult.Constructor.constructorId;
+          constructorId = constructorIdMap[constructorId] || constructorId;
 
           const points =
             (Number(driverResult.points) || 0) +
@@ -452,7 +460,7 @@ export const updateSprintScores = async () => {
 
             // Update points for the Main driver table
             updateOperations.push(
-              prisma.driver.update({
+              prisma.driver.updateMany({
                 where: { driverId: driverId },
                 data: {
                   points: { increment: points },
@@ -508,7 +516,7 @@ export const updateSprintScores = async () => {
 
             // Update points for the Main constructor table
             updateOperations.push(
-              prisma.constructor.update({
+              prisma.constructor.updateMany({
                 where: { constructorId: constructorId },
                 data: {
                   points: { increment: points },

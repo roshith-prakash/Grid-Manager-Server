@@ -21,7 +21,7 @@ model Driver {
   // 3 Letter driver code
   code              String
   // Price
-  price             Int      @default(0)
+  price             Float    @default(0)
   // Points scored in the season
   points            Int      @default(0)
   // Points History
@@ -42,39 +42,33 @@ model Driver {
   constructor_color String
   // Percentage of teams in which the driver is present
   chosenPercentage  Float    @default(0)
+  // Average Finishing Position
+  averagePosition   Float    @default(0)
+  // Number of races finished (for calculating moving average)
+  racesFinished     Int      @default(0)
   // Disabled 
   isDriverDisabled  Boolean  @default(false)
   // Created & updated times
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+  
+  teamDrivers       DriverInTeam[]
 }
 
 model DriverInTeam {
   id                String   @id @default(auto()) @map("_id") @db.ObjectId
   // Driver ID - usually last name
   driverId          String
-  // 3 Letter driver code
-  code              String
-  // Price
-  price             Int      @default(0)
+  // Relation to Driver
+  Driver            Driver   @relation(fields: [driverId], references: [driverId])
+  
   // Points scored for the Team
   pointsForTeam     Int      @default(0)
   // Points History
   teamPointsHistory Json[]
-  // First Name
-  givenName         String
-  // Last Name
-  familyName        String
-  // Image of the driver
-  image             String
-  // Nationality of driver
-  countryCode       String?
-  // Driver Number (Car number)
-  permanentNumber   Int
-  // Team for which the driver drives
-  constructor_name  String
-  // Constructor color
-  constructor_color String
+  // Locked Price at Purchase
+  price             Float    @default(0)
+  
   // Team
   Team              Team?    @relation(fields: [teamId], references: [id])
   teamId            String?  @db.ObjectId
@@ -93,7 +87,7 @@ model Constructor {
   // Constructor name
   name                  String
   // Price
-  price                 Int      @default(0)
+  price                 Float    @default(0)
   // Points scored in the season
   points                Int      @default(0)
   // Points History
@@ -108,30 +102,28 @@ model Constructor {
   // Created & updated times
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+  
+  teamConstructors      ConstructorInTeam[]
 }
 
 model ConstructorInTeam {
   id                String   @id @default(auto()) @map("_id") @db.ObjectId
-  // Constructor number (required for DND)
-  constructorNumber Int
   // Constructor Id
   constructorId     String
-  // Constructor name
-  name              String
-  // Price
-  price             Int      @default(0)
+  // Relation to Constructor
+  Constructor       Constructor @relation(fields: [constructorId], references: [constructorId])
+  
   // Points scored for the Team
   pointsForTeam     Int      @default(0)
   // Points History
   teamPointsHistory Json[]
-  // Images
-  logo              String?
-  carImage          String?
+  // Locked Price at Purchase
+  price             Float    @default(0)
+  
   // Team
   Team              Team?    @relation(fields: [teamId], references: [id])
   teamId            String?  @db.ObjectId
-  // Percentage of teams in which the constructor is present
-  chosenPercentage  Float    @default(0)
+  
   // Created & updated times
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -174,7 +166,7 @@ model Team {
   // Selected Driver IDs for filtering
   constructorIds   String[]            @default([])
   // The price for the team
-  price            Int                 @default(0)
+  price            Float                 @default(0)
   // Score
   score            Int                 @default(0)
   // Free changes
@@ -185,6 +177,22 @@ model Team {
   // League in which team is present.
   League           League?             @relation(fields: [leagueId], references: [id])
   leagueId         String?             @db.ObjectId
+  // Transfer History
+  transfers        TransferHistory[]
+}
+
+// Transfer History to track changes made to a team
+model TransferHistory {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  teamId          String   @db.ObjectId
+  Team            Team     @relation(fields: [teamId], references: [id])
+  
+  driversIn       String[] @default([]) // Array of driver names transferred in
+  driversOut      String[] @default([]) // Array of driver names transferred out
+  constructorsIn  String[] @default([]) // Array of constructor names transferred in
+  constructorsOut String[] @default([]) // Array of constructor names transferred out
+  
+  createdAt       DateTime @default(now())
 }
 
 // League in which teams are added

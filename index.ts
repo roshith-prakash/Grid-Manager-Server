@@ -44,7 +44,15 @@ const corsOptions: CorsOptions = {
     callback: (err: Error | null, allow?: boolean) => void
   ) {
     // Find request domain and check in whitelist. Allow undefined origin for server-to-server calls (e.g. Cron jobs).
-    if (!origin || whitelist.indexOf(origin) !== -1) {
+    // Also allow any localhost, 127.0.0.1, or local network (192.168.*) origin for local development
+    if (
+      !origin || 
+      whitelist.indexOf(origin) !== -1 ||
+      origin.startsWith("http://localhost:") ||
+      origin.startsWith("http://127.0.0.1:") ||
+      origin.startsWith("http://192.168.") ||
+      origin.startsWith("http://10.") // Common in some LAN setups
+    ) {
       // Accept request
       callback(null, true);
     } else {
@@ -54,10 +62,10 @@ const corsOptions: CorsOptions = {
   },
 };
 
-// Limit each IP to 30 requests per minute
+// Limit each IP to 300 requests per minute
 const limiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 30,
+  max: 300,
 });
 
 // Rate Limit

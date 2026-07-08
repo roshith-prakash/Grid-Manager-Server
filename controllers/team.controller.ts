@@ -282,17 +282,9 @@ export const createTeam = async (
         data: {
           teamId: createdTeam?.id,
           driverId: driver?.driverId,
-          permanentNumber: Number(driver?.permanentNumber),
-          code: driver?.code,
           price: driver?.price,
           pointsForTeam: 0,
           teamPointsHistory: [],
-          constructor_name: driver?.constructor_name,
-          constructor_color: driver?.constructor_color,
-          familyName: driver?.familyName,
-          givenName: driver?.givenName,
-          image: driver?.image,
-          countryCode: driver?.countryCode,
         },
       });
     });
@@ -302,14 +294,10 @@ export const createTeam = async (
       await prisma.constructorInTeam.create({
         data: {
           teamId: createdTeam?.id,
-          constructorNumber: constructor?.constructorNumber,
           constructorId: constructor?.constructorId,
-          name: constructor?.name,
           price: constructor?.price,
           pointsForTeam: 0,
           teamPointsHistory: [],
-          logo: constructor?.logo,
-          carImage: constructor?.carImage,
         },
       });
     });
@@ -373,10 +361,33 @@ export const createTeam = async (
     const team = await prisma.team.findUnique({
       where: { id: createdTeam?.id },
       include: {
-        teamConstructors: true,
-        teamDrivers: true,
+        teamConstructors: {
+          include: { Constructor: true }
+        },
+        teamDrivers: {
+          include: { Driver: true }
+        },
       },
     });
+
+    if (team) {
+      const formattedTeamDrivers = team.teamDrivers.map((dt: any) => {
+        const { Driver, ...rest } = dt;
+        return { ...rest, ...Driver, price: rest.price, currentPrice: Driver?.price, id: rest.id, driverDbId: Driver?.id };
+      });
+      const formattedTeamConstructors = team.teamConstructors.map((ct: any) => {
+        const { Constructor, ...rest } = ct;
+        return { ...rest, ...Constructor, price: rest.price, currentPrice: Constructor?.price, id: rest.id, constructorDbId: Constructor?.id };
+      });
+      
+      const formattedTeam = {
+        ...team,
+        teamDrivers: formattedTeamDrivers,
+        teamConstructors: formattedTeamConstructors,
+      };
+      res.status(200).send({ data: formattedTeam });
+      return;
+    }
 
     res.status(200).send({ data: team });
     return;
@@ -411,8 +422,8 @@ export const getTeamById = async (
         name: true,
         driverIds: true,
         constructorIds: true,
-        teamConstructors: { orderBy: { pointsForTeam: "desc" } },
-        teamDrivers: { orderBy: { pointsForTeam: "desc" } },
+        teamConstructors: { orderBy: { pointsForTeam: "desc" }, include: { Constructor: true } },
+        teamDrivers: { orderBy: { pointsForTeam: "desc" }, include: { Driver: true } },
         price: true,
         score: true,
         freeChangeLimit: true,
@@ -435,7 +446,21 @@ export const getTeamById = async (
 
     // If team exists.
     if (team) {
-      res.status(200).send({ team: team });
+      const formattedTeamDrivers = team.teamDrivers.map((dt: any) => {
+        const { Driver, ...rest } = dt;
+        return { ...rest, ...Driver, price: rest.price, currentPrice: Driver?.price, id: rest.id, driverDbId: Driver?.id };
+      });
+      const formattedTeamConstructors = team.teamConstructors.map((ct: any) => {
+        const { Constructor, ...rest } = ct;
+        return { ...rest, ...Constructor, price: rest.price, currentPrice: Constructor?.price, id: rest.id, constructorDbId: Constructor?.id };
+      });
+      
+      const formattedTeam = {
+        ...team,
+        teamDrivers: formattedTeamDrivers,
+        teamConstructors: formattedTeamConstructors,
+      };
+      res.status(200).send({ team: formattedTeam });
       return;
     }
     // If team does not exist.
@@ -614,17 +639,9 @@ export const editTeam = async (req: Request, res: Response): Promise<void> => {
         data: {
           teamId: editedTeam?.id,
           driverId: driver?.driverId,
-          permanentNumber: Number(driver?.permanentNumber),
-          code: driver?.code,
           price: driver?.price,
           pointsForTeam: 0,
           teamPointsHistory: [],
-          constructor_name: driver?.constructor_name,
-          constructor_color: driver?.constructor_color,
-          familyName: driver?.familyName,
-          givenName: driver?.givenName,
-          image: driver?.image,
-          countryCode: driver?.countryCode,
         },
       });
     });
@@ -633,14 +650,10 @@ export const editTeam = async (req: Request, res: Response): Promise<void> => {
       await prisma.constructorInTeam.create({
         data: {
           teamId: editedTeam?.id,
-          constructorNumber: constructor?.constructorNumber,
           constructorId: constructor?.constructorId,
-          name: constructor?.name,
           price: constructor?.price,
           pointsForTeam: 0,
           teamPointsHistory: [],
-          logo: constructor?.logo,
-          carImage: constructor?.carImage,
         },
       });
     });
@@ -662,6 +675,25 @@ export const editTeam = async (req: Request, res: Response): Promise<void> => {
         },
       });
     });
+
+    if (newDrivers?.length > 0 || removedDrivers?.length > 0 || newConstructors?.length > 0 || removedConstructors?.length > 0) {
+      const removedD = await prisma.driver.findMany({
+        where: { driverId: { in: removedDrivers } }
+      });
+      const removedC = await prisma.constructor.findMany({
+        where: { constructorId: { in: removedConstructors } }
+      });
+      
+      await prisma.transferHistory.create({
+        data: {
+          teamId: editedTeam?.id,
+          driversIn: newDrivers.map((d: any) => d.givenName + " " + d.familyName),
+          constructorsIn: newConstructors.map((c: any) => c.name),
+          driversOut: removedD.map((d: any) => d.givenName + " " + d.familyName),
+          constructorsOut: removedC.map((c: any) => c.name),
+        }
+      });
+    }
 
     const totalTeamCount = await prisma.team.count();
 
@@ -1862,3 +1894,5 @@ export const getTop3Teams = async (req: Request, res: Response) => {
 };
 
 // ------------------------------------------------------------------------------------------------------------------------
+
+export const getTransferHistory = async (req: Request, res: Response): Promise<void> => { try { const teamId = req?.body?.teamId; if (!teamId) { res.status(400).send({ data: 'Team ID is required.' }); return; } const history = await prisma.transferHistory.findMany({ where: { teamId: teamId }, orderBy: { createdAt: 'desc' }, }); res.status(200).send({ data: history }); return; } catch (err) { console.log(err); res.status(500).send({ data: 'Something went wrong.' }); return; } };

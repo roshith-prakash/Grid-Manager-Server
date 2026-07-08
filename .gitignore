@@ -6,3 +6,5 @@ nodemon.json
 .vercel
 test.*
 .vscode
+.env*
+scratch

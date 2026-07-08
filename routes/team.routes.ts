@@ -1,31 +1,41 @@
 import { Router } from "express";
 import {
-  createTeam,
   getDrivers,
+  getMostSelectedDrivers,
+  getHighestScoringDrivers,
+  getDriverStats,
+} from "../controllers/driver.controller.ts";
+
+import {
   getConstructors,
+  getMostSelectedConstructors,
+  getHighestScoringConstructors,
+  getConstructorStats,
+} from "../controllers/constructor.controller.ts";
+
+import {
   createLeague,
-  getLeague,
   getPublicLeagues,
   searchPublicLeagues,
-  getTeamsInaLeague,
-  getCurrentUserTeams,
+  getLeague,
+  updateLeague,
+  deleteLeague,
+  checkIfUserCanJoinLeague,
   getCurrentUserLeagues,
-  getUserPublicTeams,
   getUserPublicLeagues,
+  getTeamsInaLeague,
+} from "../controllers/league.controller.ts";
+
+import {
+  createTeam,
   getTeamById,
   editTeam,
   deleteTeam,
-  updateLeague,
-  deleteLeague,
+  getCurrentUserTeams,
+  getUserPublicTeams,
   getCurrentUserTeamsInLeague,
-  getMostSelectedDrivers,
-  getMostSelectedConstructors,
-  getHighestScoringDrivers,
-  getHighestScoringConstructors,
   getTop3Teams,
-  getDriverStats,
-  getConstructorStats,
-  checkIfUserCanJoinLeague,
+  getTransferHistory,
 } from "../controllers/team.controller.ts";
 
 // Create a router.
@@ -59,14 +69,21 @@ router.post("/get-constructors-stats", getConstructorStats);
 // Create a new team for the user.
 router.post("/create-team", createTeam);
 
+// Get Transfer History for a team
+// Get a team transfer history
+router.post("/get-transfer-history", getTransferHistory);
+
 // Get team by Id.
 router.post("/get-team-by-id", getTeamById);
 
 // Edit an existing team.
 router.post("/edit-team", editTeam);
 
-// Edit an existing team.
+// Delete a Team
 router.post("/delete-team", deleteTeam);
+
+// Leave a League (Deletes all user teams in that league)
+// Leave a league
 
 // Get Teams in a League
 router.post("/get-teams-in-a-league", getTeamsInaLeague);
